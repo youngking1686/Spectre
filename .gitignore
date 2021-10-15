@@ -8,3 +8,4 @@ radar_data_update.py
 post_test.py
 app.db
 param.txt
+symbol_load.csv

@@ -14,7 +14,7 @@ db = Database('{}/app.db'.format(mainfolder))
 
 trd_date = dt.datetime.today().strftime('%d_%m_%Y')
 LOG_FORMAT = "%(levelname)s %(asctime)s %(name)s- %(message)s"
-logging.basicConfig(filename='{}/log/trade_day_{}.log'.format(mainfolder, trd_date),
+logging.basicConfig(filename='{}/logs/trade_day_{}.log'.format(mainfolder, trd_date),
                     level = logging.DEBUG,
                     format= LOG_FORMAT,
                     filemode = 'a')
@@ -170,7 +170,7 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
             elif dfc.signal.iloc[-1] == 'Sell' and dfc.prev_signal.iloc[-1] != 'Sell':
                 payload = getJsonStructure(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'sell')
                 print(f"Sell Signal for {name}")
-            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+            # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
             print(asyncio.run(post_signal(payload)))
             logger.info(f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!")
             return f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!"

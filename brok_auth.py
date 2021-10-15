@@ -13,7 +13,7 @@ mainfolder = config.mainfolder
 
 trd_date = dt.datetime.today().strftime('%d_%m_%Y')
 LOG_FORMAT = "%(levelname)s %(asctime)s %(name)s- %(message)s"
-logging.basicConfig(filename='{}/log/trade_day_{}.log'.format(mainfolder, trd_date),
+logging.basicConfig(filename='{}/logs/trade_day_{}.log'.format(mainfolder, trd_date),
                     level = logging.DEBUG,
                     format= LOG_FORMAT,
                     filemode = 'a')
@@ -36,14 +36,14 @@ def market_check(fyers):
     if market_status == 'OPEN':
         return "Market is Open to Trade"
     elif market_status == 'CLOSED':
-        # cont = input("Market is closed. Do you want to continue? (y/n): ")
-        # if cont == 'y':
-        #     pass
-        # else:
-        eve = "Market is closed. Stopping the ALGO!!"
-        logger.error(eve)
-        brain.telegramer(eve)
-        sys.exit(eve)
+        cont = input("Market is closed. Do you want to continue? (y/n): ")
+        if cont == 'y':
+            pass
+        else:
+            eve = "Market is closed. Stopping the ALGO!!"
+            logger.error(eve)
+            brain.telegramer(eve)
+            sys.exit(eve)
 
 def fyers_login():
     try:

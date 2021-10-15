@@ -13,7 +13,7 @@ db = Database('{}/app.db'.format(mainfolder))
 
 trd_date = dt.datetime.today().strftime('%d_%m_%Y')
 LOG_FORMAT = "%(levelname)s %(asctime)s %(name)s- %(message)s"
-logging.basicConfig(filename='{}/log/trade_day_{}.log'.format(mainfolder, trd_date),
+logging.basicConfig(filename='{}/logs/trade_day_{}.log'.format(mainfolder, trd_date),
                     level = logging.DEBUG,
                     format= LOG_FORMAT,
                     filemode = 'a')
@@ -116,7 +116,7 @@ def scanner(fyers):
 if __name__ == '__main__':
     fyers = brok_auth.fyers_login()
     pa_webhooks = config.webhooks
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())       
+    # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())       
     eve = asyncio.run(brok_auth.pa_clients_login(pa_webhooks))
     logger.info(eve)
     brain.telegramer(eve)

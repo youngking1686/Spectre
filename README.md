@@ -11,5 +11,5 @@ git clone git@github.com:youngking1686/Spectre.git
 ===============
 pull from git
 git init
-git pull https://github.com/youngking1686/Spectre.git main
+git pull 
 git reset --hard https://github.com/youngking1686/Spectre.git main (only when there is a conflict and you know it)
