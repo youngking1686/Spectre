@@ -1,0 +1,10 @@
+*.ini
+*.pyc
+data/
+temp/
+logs/
+radar.py
+radar_data_update.py
+post_test.py
+app.db
+param.txt
