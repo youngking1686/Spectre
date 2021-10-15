@@ -1,3 +1,4 @@
 pandas
 fyers-apiv2
 dill
+aiohttp
