@@ -35,15 +35,15 @@ def market_check(fyers):
     market_status = fyers.market_status()['marketStatus'][6]['status'] #Checks commodities market exhc:12, segment:20
     if market_status == 'OPEN':
         return "Market is Open to Trade"
-    elif market_status == 'CLOSED':
-        cont = input("Market is closed. Do you want to continue? (y/n): ")
-        if cont == 'y':
-            pass
-        else:
-            eve = "Market is closed. Stopping the ALGO!!"
-            logger.error(eve)
-            brain.telegramer(eve)
-            sys.exit(eve)
+    elif market_status == 'CLOSE':
+        # cont = input("Market is closed. Do you want to continue? (y/n): ")
+        # if cont == 'y':
+        #     pass
+        # else:
+        eve = "Market is closed. Stopping the ALGO!!"
+        logger.error(eve)
+        brain.telegramer(eve)
+        sys.exit(eve)
 
 def fyers_login():
     try:

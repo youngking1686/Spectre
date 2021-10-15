@@ -190,5 +190,5 @@ def telegramer(messa):
     EQ_bot_token = config.EQ_bot_token
     chat_id = config.EQ_bot_chat_ids
     tele_url = f'https://api.telegram.org/bot{ EQ_bot_token }/sendMessage'
-    payload = {'chat_id': chat_id, 'text': messa}
+    payload = {'chat_id': chat_id, 'text': 'Spectre: '+ messa}
     requests.post(tele_url, data=payload)
