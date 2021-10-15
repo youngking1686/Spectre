@@ -170,7 +170,8 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
             elif dfc.signal.iloc[-1] == 'Sell' and dfc.prev_signal.iloc[-1] != 'Sell':
                 payload = getJsonStructure(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'sell')
                 print(f"Sell Signal for {name}")
-            # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+            # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #Only for windows
+            asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux
             print(asyncio.run(post_signal(payload)))
             logger.info(f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!")
             return f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!"
