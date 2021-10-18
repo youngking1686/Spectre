@@ -17,8 +17,8 @@ def data_load():
         except:
             db.update_settings(df.name[i], int(df.stfp[i]), int(df.ltfp[i]), int(df.ctfp[i]), \
                 int(df.lenght[i]), format_fix(df.start_time[i]), df.end_time[i], int(df.trade[i]), int(df.stop_limit[i]))
-            print(f"Updated for {df.name[i]}")
+            # print(f"Updated for {df.name[i]}")
     print("DB update completed")
     brain.telegramer("DB update completed")
-        
-data_load()
+    
+#data_load()

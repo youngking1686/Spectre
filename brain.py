@@ -19,7 +19,7 @@ logging.basicConfig(filename='{}/logs/trade_day_{}.log'.format(mainfolder, trd_d
                     filemode = 'a')
 logger = logging.getLogger(__name__)
 
-current_positions =[]
+# current_positions =[]
 # def validate_signal(name, side):
 #     if (name, side) in current_positions:
 #         return False
@@ -116,9 +116,7 @@ def post_signal(payload):
         post_url = webhook + '/pa_webhook'
         resp = requests.post(post_url, data=payload)
         all_resp.append(str(resp.content))
-    messa = 'Spectre'
-    for res in all_resp:
-        messa = messa + ': ' + res
+    messa = 'Spectre' + ": ".join(all_resp)
     logger.info(messa)
     telegramer(messa)
     return messa
