@@ -19,7 +19,7 @@ logging.basicConfig(filename='{}/logs/trade_day_{}.log'.format(mainfolder, trd_d
                     filemode = 'a')
 logger = logging.getLogger(__name__)
 
-timeframe = 60 # in seconds ctf*60
+timeframe = 61 # in seconds ctf*60
 
 def is_candle_tf(tf, now):
     minu = now.strftime("%H:%M:00")
@@ -97,7 +97,7 @@ def scanner(fyers):
             logger.info(eve)
     with concurrent.futures.ThreadPoolExecutor() as executor:
         results = [executor.submit(brain.T_T, fyers, out[1], out[2], out[3], out[4], out[5], out[6], out[7], out[8], \
-                    out[9], out[10], 0) for out in tradable_symbols]
+                    out[9], out[10]) for out in tradable_symbols]
         for f in concurrent.futures.as_completed(results):
             new = f.result()
             resp.append(new)
@@ -119,6 +119,7 @@ if __name__ == '__main__':
     # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
     asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
     eve = asyncio.run(brok_auth.pa_clients_login(pa_webhooks))
+    print(eve)
     logger.info(eve)
     brain.telegramer(eve)
     interval = timeframe - dt.datetime.now().second
