@@ -115,9 +115,7 @@ def post_signal(payload):
     for webhook in pos_urls:
         post_url = webhook + '/pa_webhook'
         resp = requests.post(post_url, data=payload)
-        print(resp.content)
         all_resp.append(str(resp.content))
-    print(all_resp)
     messa = 'Spectre'
     for res in all_resp:
         messa = messa + ': ' + res
