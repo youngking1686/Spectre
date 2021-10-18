@@ -13,7 +13,7 @@ user_detail = { 'fyers_client_id': 'UH471HHHJP-100',
                 'pan_dob': '27-01-1987',
                 'redirect_uri': "http://127.0.0.1:5000/login"}
 
-webhooks = ['https://eaglequant.pythonanywhere.com']#['http://127.0.0.2:5001/ks_webhook'] #, 'https://eaglequant.pythonanywhere.com/tv_webhook']
+webhooks = ['https://eaglequant.pythonanywhere.com', 'https://pooranan.pythonanywhere.com']#['http://127.0.0.2:5001/ks_webhook'] #, 'https://eaglequant.pythonanywhere.com/tv_webhook']
 
 #Telegram
 EQ_bot_token = "1555749245:AAHPha-GOQZvCfmH-SgIydwEiyu_-JGdsto"
