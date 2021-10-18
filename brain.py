@@ -116,9 +116,12 @@ def post_signal(payload):
         post_url = webhook + '/pa_webhook'
         resp = requests.post(post_url, data=payload)
         all_resp.append(resp.content)
-    logger.info(all_resp)
-    telegramer(all_resp)
-    return all_resp
+    messa = 'Spectre'
+    for res in all_resp:
+        messa = messa + ': ' + res
+    logger.info(messa)
+    telegramer(messa)
+    return messa
 
 def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time):
     try:
