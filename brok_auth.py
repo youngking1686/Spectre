@@ -117,4 +117,7 @@ async def pa_clients_login(pa_webhooks):
             login_url = webhook + '/alice_login'
             tasks.append(asyncio.ensure_future(alice_login(session, login_url)))
         all_resps = await asyncio.gather(*tasks)
-        return all_resps
+        messa = 'Spectre'
+        for res in all_resps:
+            messa = messa + ': ' + res
+        return messa

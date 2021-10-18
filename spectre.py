@@ -72,7 +72,7 @@ def scanner(fyers):
     db_list = db.fetch_all()
     symbol_list = [active for active in db_list if active[-2]]
     if not symbol_list:
-        eve = "There are no active instruments to Trade, STOPPING!!"
+        eve = "Spectre: There are no active instruments to Trade, STOPPING!!"
         logger.error(eve)
         brain.telegramer(eve)
         sys.exit(eve)

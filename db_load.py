@@ -1,5 +1,5 @@
 from dbquery import Database
-import config
+import config, brain
 import pandas as pd
 
 mainfolder = config.mainfolder
@@ -19,5 +19,6 @@ def data_load():
                 int(df.lenght[i]), format_fix(df.start_time[i]), df.end_time[i], int(df.trade[i]), int(df.stop_limit[i]))
             print(f"Updated for {df.name[i]}")
     print("DB update completed")
+    brain.telegramer("DB update completed")
         
 data_load()
