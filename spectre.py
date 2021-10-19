@@ -19,7 +19,7 @@ logging.basicConfig(filename='{}/logs/trade_day_{}.log'.format(mainfolder, trd_d
                     filemode = 'a')
 logger = logging.getLogger(__name__)
 
-timeframe = 61 # in seconds ctf*60
+timeframe = 60 # in seconds ctf*60
 
 def is_candle_tf(tf, now):
     minu = now.strftime("%H:%M:00")
