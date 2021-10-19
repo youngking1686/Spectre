@@ -140,6 +140,9 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         df1.loc[((df1.strn > 0) & (df1.ltrn < 0)) | ((df1.strn < 0) & (df1.ltrn > 0)) , 'Trend'] = 'Sideways'
         df1.Trend.fillna('Sideways', inplace=True)
         dfc = current_timeframe(df1, ctf)
+        now = dt.datetime.now().strftime("%H:%M:00")
+        if dfc.minute.iloc[-1] == now:
+            dfc.drop(dfc.tail(1).index,inplace=True)
         dfc['bar_len'] = (dfc.high-dfc.low).rolling(int(length/1.5)).mean().round(2)
         dfc.bar_len.fillna(0, inplace=True)
         dfc.loc[(dfc['Trend'] == 'Uptrend'), 'signal'] = 'Buy'
