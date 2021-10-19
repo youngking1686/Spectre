@@ -26,9 +26,9 @@ def is_candle_tf(tf, now):
     trt1 = minu.split(':')
     tr2 = ((int(trt1[0]) * 60) + (int(trt1[1])) /(tf))
     if tr2.is_integer():
-        yield True
+        return True
     else:
-        yield False
+        return False
 
 def SL_trigger(SL, LTP, symbol):
     try:
