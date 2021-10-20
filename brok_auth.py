@@ -34,6 +34,9 @@ def update_pickle(fyers_obj):
 def market_check(fyers):
     market_status = fyers.market_status()['marketStatus'][6]['status'] #Checks commodities market exhc:12, segment:20
     if market_status == 'OPEN':
+        eve = "Market is Open to Trade"
+        logger.info(eve)
+        brain.telegramer(eve)
         return "Market is Open to Trade"
     elif market_status == 'CLOSE':
         # cont = input("Market is closed. Do you want to continue? (y/n): ")
@@ -45,35 +48,23 @@ def market_check(fyers):
         brain.telegramer(eve)
         sys.exit(eve)
 
-def fyers_login():
-    try:
-        fyers = read_pickle()
-        resps = fyers.get_profile()
-        if resps['s'] == 'ok':
-            eve = "Fyers Old Login Success"
-            print(eve)
-            logger.warning(eve)
-            print(market_check(fyers))
-        elif resps['s'] == 'error':
-            eve = "Fyers Old Login Failed, Fresh Login required"
-            logger.warning(eve)
-            sys.exit(eve)
-        return read_pickle()
-    except:
+class fyers_login:
+    def __init__(self):
+        self.client_id = config.user_detail['fyers_client_id']
+        self.secret_key = config.user_detail['fyers_secret_key']
+        self.redirect_uri = config.user_detail['redirect_uri']
+        self.response_type = "code"
+        self.grant_type = "authorization_code"
+        self.state = "private"
+        self.nonce = "private"
+    
+    def authenticate(self):
         try:
-            client_id = config.user_detail['fyers_client_id']
-            secret_key = config.user_detail['fyers_secret_key']
-            redirect_uri = config.user_detail['redirect_uri']
-            response_type = "code"
-            grant_type = "authorization_code"
-            state = "private"
-            nonce = "private"
-
             inpu = {"fyers_id": config.user_detail['fyers_id'], "password": config.user_detail['password'], "pan_dob": config.user_detail['pan_dob'], 
                     "app_id": config.user_detail['fyers_app_id'], "redirect_uri": config.user_detail['redirect_uri'], "appType": "100", "code_challenge": "", 
                     "state": "private", "scope": "", "nonce": "private", "response_type": "code", "create_cookie": "true"}
-            session = accessToken.SessionModel(client_id=client_id, secret_key=secret_key,\
-                redirect_uri=redirect_uri, response_type=response_type, grant_type=grant_type, state=state, nonce=nonce)
+            session = accessToken.SessionModel(client_id=self.client_id, secret_key=self.secret_key,\
+                redirect_uri=self.redirect_uri, response_type=self.response_type, grant_type=self.grant_type, state=self.state, nonce=self.nonce)
             response = session.generate_authcode()
             # print("Response from Try-Catch 1 is - \n", response)
             headers = {
@@ -95,14 +86,18 @@ def fyers_login():
             response = session.generate_token()
             access_token = response["access_token"]
             #INSERT YOUR DESKTOP PATH FOR LOG FILE CREATION
-            fyers = fyersModel.FyersModel(client_id=client_id, token=access_token, log_path="{}/logs/".format(mainfolder)) 
+            fyers = fyersModel.FyersModel(client_id=self.client_id, token=access_token, log_path="{}/logs/".format(mainfolder)) 
             is_async = True
-            print("Fyers New Login Successfull!")
             print(market_check(fyers))
+            eve = "Fyers Login Successfull!"
+            print(eve)
+            logger.info(eve)
+            brain.telegramer(eve)
             return update_pickle(fyers)
         except:
             eve = f"Fyers Login Failed!! {traceback.print_exc()}"
             logger.error(eve)
+            brain.telegramer(eve)
             sys.exit(eve)
             
 async def alice_login(session, login_url):

@@ -21,4 +21,4 @@ def data_load():
     print("DB update completed")
     brain.telegramer("DB update completed")
     
-#data_load()
+# data_load()

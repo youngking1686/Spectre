@@ -114,7 +114,7 @@ def scanner(fyers):
     T.start()
         
 if __name__ == '__main__':
-    fyers = brok_auth.fyers_login()
+    fyers = brok_auth.fyers_login().authenticate()
     db_load.data_load()
     pa_webhooks = config.webhooks
     # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows

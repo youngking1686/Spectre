@@ -19,18 +19,6 @@ logging.basicConfig(filename='{}/logs/trade_day_{}.log'.format(mainfolder, trd_d
                     filemode = 'a')
 logger = logging.getLogger(__name__)
 
-# current_positions =[]
-# def validate_signal(name, side):
-#     if (name, side) in current_positions:
-#         return False
-#     else:
-#         if side == 'Buy' and (name, 'Sell') in current_positions:
-#             current_positions.remove((name,'Sell'))
-#         elif side == 'Sell' and (name, 'Buy') in current_positions:
-#             current_positions.remove((name,'Buy'))
-#         current_positions.append((name,side))
-#         return True
-
 class fetch_data:
     def __init__(self, fyers, symbol, timeframe):
         self.fyers = fyers
