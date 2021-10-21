@@ -6,7 +6,7 @@ import gc, logging
 import brok_auth, brain, db_load
 import concurrent.futures
 from dbquery import Database
-import asyncio
+import asyncio, requests
 
 mainfolder = config.mainfolder
 db = Database('{}/app.db'.format(mainfolder))
@@ -20,6 +20,23 @@ logging.basicConfig(filename='{}/logs/trade_day_{}.log'.format(mainfolder, trd_d
 logger = logging.getLogger(__name__)
 
 timeframe = 60 # in seconds ctf*60
+
+def pa_check():
+    urls = config.webhooks
+    for url in urls:
+        url1 = url + '/pa_check'
+        resp = requests.post(url1, data=None)
+        if resp.content==b'ok':
+            continue
+        elif resp.content==b'error':
+            url = url + '/alice_login'
+            resp = requests.post(url, data=None)
+            resps = resp.json()
+            eve = resps['message'], 'Login Refreshed'
+            print(eve)
+            logger.warning(eve)
+            brain.telegramer(url)
+        continue 
 
 def is_candle_tf(tf, now):
     minu = now.strftime("%H:%M:00")
@@ -109,6 +126,7 @@ def scanner(fyers):
     except:
         pass
     gc.collect()
+    pa_check()
     interval = timeframe - (time.time() - start)
     T = threading.Timer(interval, scanner, args=[fyers])
     T.start()
