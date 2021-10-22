@@ -37,7 +37,7 @@ class fetch_data:
             eve = f"Failed fetch for symbol {self.symbol}"
             logger.warning(eve)
             telegramer(eve)
-            time.sleep(0.5)
+            time.sleep(0.3)
             return fetch_data.fetch(self)
 
     def get_data(self):
@@ -61,9 +61,10 @@ def change_timeframe(data, timeframe):
     return df_tf
 
 def P_T(df, timeframe, length):
-    dft = change_timeframe(df, timeframe)   
-    tr = (dft.close - dft.open)/dft.close
-    dft['trn'] = ta.SMA(tr, length) #!!!!
+    dft = change_timeframe(df, timeframe)
+    plen = len(str(int(dft.close[-1]))) 
+    tr = (dft.close - dft.open)*(10**plen)/dft.close
+    dft['trn'] = round(ta.SMA(tr, length), 3) #!!!!
     return dft
 
 def current_timeframe(data, timeframe): 
