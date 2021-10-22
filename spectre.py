@@ -101,9 +101,11 @@ def scanner(fyers):
         symbol, name, exchange, ins_type, ctfp, start_time, end_time, trade, stop_limit = \
         out[1], out[2], out[3], out[4], out[7], out[9], out[10], out[11], out[12]
         ltp = fetch_ltp(fyers, symbol, 0)
-        if current_time > end_time or SL_trigger(stop_limit, ltp, symbol):
-            print(f"Exiting for the day for {symbol}")
-            db.update_trade(name, False)
+        sl_trg = SL_trigger(stop_limit, ltp, symbol)
+        if current_time > end_time or sl_trg:
+            print(f"Exiting poisition for {symbol}")
+            if not sl_trg:
+                db.update_trade(name, False)
             payload = brain.getJsonStructure(name, exchange, ins_type, current_time, ltp, 'exit_one')
             print(brain.post_signal(payload))
         elif current_time > start_time and current_time < end_time and is_candle_tf(ctfp, now):
