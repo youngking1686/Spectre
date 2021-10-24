@@ -39,14 +39,14 @@ def market_check(fyers):
         brain.telegramer(eve)
         return "Market is Open to Trade"
     elif market_status == 'CLOSE':
-        # cont = input("Market is closed. Do you want to continue? (y/n): ")
-        # if cont == 'y':
-        #     pass
-        # else:
-        eve = "Market is closed. Stopping the ALGO!!"
-        logger.error(eve)
-        brain.telegramer(eve)
-        sys.exit(eve)
+        cont = input("Market is closed. Do you want to continue? (y/n): ")
+        if cont == 'y':
+            pass
+        else:
+            eve = "Market is closed. Stopping the ALGO!!"
+            logger.error(eve)
+            brain.telegramer(eve)
+            sys.exit(eve)
 
 class fyers_login:
     def __init__(self):
@@ -102,7 +102,7 @@ class fyers_login:
             
 async def alice_login(session, login_url):
     async with session.get(login_url) as resp:
-        resps = await resp.json()
+        resps = await resp.json(content_type=None)
         return resps['message']
 
 async def pa_clients_login(pa_webhooks):
@@ -112,5 +112,5 @@ async def pa_clients_login(pa_webhooks):
             login_url = webhook + '/alice_login'
             tasks.append(asyncio.ensure_future(alice_login(session, login_url)))
         all_resps = await asyncio.gather(*tasks)
-        messa = 'Spectre' + ": ".join(all_resps)
+        messa = 'Spectre: ' + ": ".join(all_resps)
         return messa

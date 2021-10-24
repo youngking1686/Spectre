@@ -24,7 +24,8 @@ if not os.path.isfile('{}/app.db'.format(mainfolder)):
             start_time TEXT NOT NULL,
             end_time TEXT NOT NULL,
             trade BOOLEAN NOT NULL,
-            stop_limit INTEGER NOT NULL
+            stop_limit INTEGER NOT NULL,
+            position TEXT NOT NULL
         )
     """)
     conn.commit()
@@ -40,6 +41,11 @@ class Database:
         rows = self.cur.fetchall()
         return rows[0]
 
+    def fetch_position(self, symbol):
+        self.cur.execute("""SELECT position FROM symbols WHERE name = ?""", (symbol,))
+        rows = self.cur.fetchall()
+        return rows[0][0]
+    
     def fetch_all(self):
         self.cur.execute("""SELECT * FROM symbols""")
         rows = self.cur.fetchall()
@@ -50,23 +56,23 @@ class Database:
         rows = self.cur.fetchall()
         return rows
 
-    def insert(self, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time, trade, stop_limit):
+    def insert(self, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time, trade, stop_limit, position):
         if ins_type == 'FUT':
             symbol = exchange + ':' + name + ins_type
         elif ins_type == 'EQ':
             symbol = exchange + ':' + name + '-' + ins_type
         self.cur.execute("""INSERT INTO symbols (symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, 
-                            start_time, end_time, trade, stop_limit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
-                         (symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time, trade, stop_limit))
+                            start_time, end_time, trade, stop_limit, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+                         (symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time, trade, stop_limit, position))
         self.conn.commit()
 
     def remove(self, name):
         self.cur.execute("""DELETE FROM symbols WHERE name=?""", (name,))
         self.conn.commit()
 
-    def update_settings(self, name, stfp, ltfp, ctfp, length, start_time, end_time, trade, stop_limit):
-        self.cur.execute("""UPDATE symbols SET stfp = ?, ltfp = ?, ctfp = ?, length = ?, start_time = ?, end_time = ?, trade = ?, stop_limit = ?
-                         WHERE name = ?""", (stfp, ltfp, ctfp, length, start_time, end_time, trade, stop_limit, name))
+    def update_settings(self, name, stfp, ltfp, ctfp, length, start_time, end_time, trade, stop_limit, position):
+        self.cur.execute("""UPDATE symbols SET stfp = ?, ltfp = ?, ctfp = ?, length = ?, start_time = ?, end_time = ?, trade = ?, stop_limit = ?, position = ?
+                         WHERE name = ?""", (stfp, ltfp, ctfp, length, start_time, end_time, trade, stop_limit, position, name))
         self.conn.commit()
         
     def update_trade(self, name, trade):
@@ -77,6 +83,14 @@ class Database:
         try:
             lock.acquire(True)
             self.cur.execute("""UPDATE symbols SET stop_limit = ? WHERE name = ?""", (stop_limit, name))
+            self.conn.commit()
+        finally:
+            lock.release()
+            
+    def update_position(self, name, position):
+        try:
+            lock.acquire(True)
+            self.cur.execute("""UPDATE symbols SET position = ? WHERE name = ?""", (position, name))
             self.conn.commit()
         finally:
             lock.release()

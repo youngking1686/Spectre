@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "optimus-321709",
+  "private_key_id": "9d03ace9da0ca4c6c58ae326fbdfd9283c642fa2",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC3yshdnVW9Zkq1\nJqs1//ot8PERHUHhekNLUQ8EFm1DGcs6JHQLSkc5LwzHvs4xnZ7E5KseqNLsT3x0\nGQanShFWE8UvsfGIplvF6obRbCKGbN3V13V1b00uWoGl5bA83wuzxgZZOGF4mvqq\n2ZtEDRQd+ygFsHrZmW6yVaAaK/6pnzpFa+r6kyBsOhDnlzuFpJqPke1XC1rvoAWZ\nelKl6ffjdzRAS8biOHdBLK6jDgy7kq2yi627g1IU0GI1mH7gGyqNzsnu9SfOMCWy\n5WVrZ8YqpR5GNQWFzgukfzNLcwRnj28UHe18N0TDngnrdqCxnizocUSKe3FmgFAh\nci1WXAjJAgMBAAECggEADu3ia7RJkCp8fA2Jj8fcvxmYw16giNvBFp+dfCQEORSh\nzPXEFVyxv2PigmEt55rZmD3I5qMpCvgD8HxN7Y3XLapKdK7cI1D8GG4OCHnjrg6u\n0F2BlYn2d4LzkBHByJgHn9FAl8O8KytPnEwz0AnN7geGPzwQJpfPhZ3t9OJI++cn\nKRmsn2+pJXEIPKKxcaqNgNshrY2ky5YlDBT1faxnjQ46CaPZ9BFwA38t71eoJ7dX\nCdekpas3ZmQyfAbWjhy6DP+Cv0CiQAoNAxSoQIRPCSvwBuqhTzHGrlBS80c1SMEE\nwPhhHkuOfgpmmT+0VKkbWlEt0DtUpdKVzxVsiGvgpwKBgQD4VHkCyiF++2SdRlGO\nf3LZ3ExyrMiKCoqchy2d5tt26OMF7iIJD4npRh3mij2Nq+EEVWLLoMt9MYjjQneU\n78i0AoPQQAER3TMARYO/SzlykFVnfxVwDUPhe3QPlYQORw5PAgrNLULYaNzrnSrd\n5ZcoWnqYVjejsdeHNcja/MdlnwKBgQC9eAOI8b8lRVpiW6rNcVYHCMplBCvcZqlT\nIdT8XjYLw76RDaqEuLgezYhUOetIJnCuegEQ+c7WtcI5YPKTkuueHDqpVrFEMb/z\nbsq7D1jVnIZVSPqwYoj37WnQOU3WXcE6Ipxd8x798DHtfRh+nR6zaJjelNHpTRz8\nGlH8r/nolwKBgFOuA2kRO+BSTkFBJNJj2AvZ1FkAKEN78eF1G8YNuP6E05t39zge\naFaXLhQ1mTBYLucK7tO3R1rUilAqYalqc7NU9Z4DM1kVtM3unsqjSqR0RpMtm8e6\ncJlWxHFL7Mfy4bt18LXa/p92Fpu+xmcnqpwKgS08QFuE3h/N2/UPIRH5AoGAV8ex\ng5HU6BSgkm87y+DVZX7qHjD3jS43Bp/nCGExkvPGZ3e4Z7MZApRgs/z9h7jffcZi\nlhXWgV1GNcU3va1U4jTb7LaQfDK8ZrEO1el/U8An8H1WP7/3Cz6ARos2B7n6GtAM\nN+66jhXpW8kYPxjWL3KnWIAEXJ1wb1BWacax9tMCgYBivKenqwWSP9K0aAgyCRWo\n5Dc+ApBYTySuWjmQofmRMMLcLG6v/fTnNzfm0CjIsiD/BrZ6m87ZYdTKOp4HzqYn\nISH7uSfns1N7G6HL3tDDPIkCAVgV17aqmWm06Afpc6JllORt5ySt+CAuR+CpT9gF\nNbOKrpGDlV6gNcwxtlTRUA==\n-----END PRIVATE KEY-----\n",
+  "client_email": "egq-optimus@optimus-321709.iam.gserviceaccount.com",
+  "client_id": "102543289639162730012",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/egq-optimus%40optimus-321709.iam.gserviceaccount.com"
+}

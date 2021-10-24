@@ -4,9 +4,9 @@ import talib as ta
 from datetime import date, timedelta
 import datetime as dt
 import config
-import json, requests, logging, time
+import logging, time
 from dbquery import Database
-import requests, json
+import asyncio, aiohttp, json, requests
 
 mainfolder = config.mainfolder
 db = Database('{}/app.db'.format(mainfolder))
@@ -98,17 +98,23 @@ def getJsonStructure(name, exchange, ins_type, time, price, action):
                 "product_type": "MIS"}}
     return json.dumps(dic)
 
-def post_signal(payload):
-    all_resp = []
-    pos_urls = config.webhooks
-    for webhook in pos_urls:
-        post_url = webhook + '/pa_webhook'
-        resp = requests.post(post_url, data=payload)
-        all_resp.append(str(resp.content))
-    messa = 'Spectre' + ": ".join(all_resp)
-    logger.info(messa)
-    telegramer(messa)
-    return messa
+async def post(session, login_url, payload):
+    async with session.post(login_url, data = payload) as resp:
+        resps = await resp.json(content_type=None)
+        return resps['message']
+
+async def pa_post(payload):
+    pa_webhooks = config.webhooks
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for webhook in pa_webhooks:
+            login_url = webhook + '/pa_webhook'
+            tasks.append(asyncio.ensure_future(post(session, login_url, payload)))
+        all_resps = await asyncio.gather(*tasks)
+        messa = 'Spectre: ' + ": ".join(all_resps)
+        logger.info(messa)
+        telegramer(messa)
+        return messa
 
 def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time):
     try:
@@ -134,6 +140,7 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
             dfc.drop(dfc.tail(1).index,inplace=True)
         dfc['bar_len'] = (dfc.high-dfc.low).rolling(int(length/1.5)).mean().round(2)
         dfc.bar_len.fillna(0, inplace=True)
+        prev_signal = db.fetch_position(name)
         dfc.loc[(dfc['Trend'] == 'Uptrend'), 'signal'] = 'Buy'
         dfc.loc[(dfc['Trend'] == 'Downtrend'), 'signal'] = 'Sell'
         dfc.signal.ffill(inplace=True)
@@ -143,14 +150,15 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         dfc.loc[(dfc['minute'] > end_time), 'signal'] = 'Eod'
         dfc['prev_signal'] = dfc.signal.shift(periods=1)
         dfc.prev_signal.fillna('Wait', inplace=True)
-        dfc.loc[(((dfc['signal'] == 'Buy') & ((dfc.prev_signal == 'Wait') | (dfc.prev_signal == 'Eod'))) | \
-                ((dfc['signal'] == 'Buy') & (dfc.prev_signal == 'Sell'))), 'buy_entry'] = dfc.close
-        dfc.loc[(((dfc['signal'] == 'Sell') & ((dfc.prev_signal == 'Wait') | (dfc.prev_signal == 'Eod'))) | \
-                ((dfc['signal'] == 'Sell') & (dfc.prev_signal == 'Buy'))), 'buy_entry'] = 0
-        dfc.loc[(((dfc['signal'] == 'Sell') & ((dfc.prev_signal == 'Wait') | (dfc.prev_signal == 'Eod'))) | \
-                ((dfc['signal'] == 'Sell') & (dfc.prev_signal == 'Buy'))), 'sell_entry'] = dfc.close
-        dfc.loc[(((dfc['signal'] == 'Buy') & ((dfc.prev_signal == 'Wait') | (dfc.prev_signal == 'Eod'))) | \
-                ((dfc['signal'] == 'Buy') & (dfc.prev_signal == 'Sell'))), 'sell_entry'] = 0
+        db.update_position(name, dfc['signal'][-1])
+        dfc.loc[(((dfc.signal == 'Buy') & ((dfc.prev_signal == 'Wait') | (dfc.prev_signal == 'Eod'))) | \
+                ((dfc.signal == 'Buy') & (dfc.prev_signal == 'Sell'))), 'buy_entry'] = dfc.close
+        dfc.loc[(((dfc.signal == 'Sell') & ((dfc.prev_signal == 'Wait') | (dfc.prev_signal == 'Eod'))) | \
+                ((dfc.signal == 'Sell') & (dfc.prev_signal == 'Buy'))), 'buy_entry'] = 0
+        dfc.loc[(((dfc.signal == 'Sell') & ((dfc.prev_signal == 'Wait') | (dfc.prev_signal == 'Eod'))) | \
+                ((dfc.signal == 'Sell') & (dfc.prev_signal == 'Buy'))), 'sell_entry'] = dfc.close
+        dfc.loc[(((dfc.signal == 'Buy') & ((dfc.prev_signal == 'Wait') | (dfc.prev_signal == 'Eod'))) | \
+                ((dfc.signal == 'Buy') & (dfc.prev_signal == 'Sell'))), 'sell_entry'] = 0
         dfc.buy_entry.ffill(inplace=True)
         dfc.sell_entry.ffill(inplace=True)
         conditions = [(((dfc.signal == 'Buy') & (dfc.prev_signal == 'Buy')) | ((dfc.signal == 'Buy') & (dfc.prev_signal != 'Buy'))), 
@@ -158,15 +166,19 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         choices = [(dfc.buy_entry - (1.5*dfc.bar_len.astype(int))), (-1*(dfc.sell_entry + (1.5*dfc.bar_len.astype(int))))]
         dfc['stop_limit'] = np.select(conditions, choices, default=0)
         db.update_stop_limit(name, dfc.stop_limit.iloc[-1])
-        dfc.to_csv('data/{}.csv'.format(name))
-        if dfc.signal.iloc[-1] == 'Buy' and dfc.prev_signal.iloc[-1] != 'Buy':
+        dfc.to_csv('data/{}.csv'.format(name))           
+        if dfc.signal.iloc[-1] == 'Buy' and prev_signal != 'Buy':
             payload = getJsonStructure(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'buy')
             print(f"Buy Signal for {name}")
-            print(post_signal(payload))
-        elif dfc.signal.iloc[-1] == 'Sell' and dfc.prev_signal.iloc[-1] != 'Sell':
+            # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
+            asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
+            print(asyncio.run(pa_post(payload)))
+        elif dfc.signal.iloc[-1] == 'Sell' and prev_signal != 'Sell':
             payload = getJsonStructure(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'sell')
             print(f"Sell Signal for {name}")
-            print(post_signal(payload))
+            # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
+            asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
+            print(asyncio.run(pa_post(payload)))
         logger.info(f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!")
         return f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!"
     except:
