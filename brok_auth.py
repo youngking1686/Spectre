@@ -105,8 +105,9 @@ async def alice_login(session, login_url):
         resps = await resp.json(content_type=None)
         return resps['message']
 
-async def pa_clients_login(pa_webhooks):
+async def pa_clients_login():
     async with aiohttp.ClientSession() as session:
+        pa_webhooks = config.webhooks
         tasks = []
         for webhook in pa_webhooks:
             login_url = webhook + '/alice_login'

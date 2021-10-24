@@ -144,12 +144,13 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         dfc.loc[(dfc['Trend'] == 'Uptrend'), 'signal'] = 'Buy'
         dfc.loc[(dfc['Trend'] == 'Downtrend'), 'signal'] = 'Sell'
         dfc.signal.ffill(inplace=True)
-        dfc['signal'].replace('', np.nan, inplace=True)
-        dfc.dropna(subset=['signal'], inplace=True)
+        ####################these codes to logg the trade data are marked as #$%@! ######
+        dfc['signal'].replace('', np.nan, inplace=True) #$%@!
+        dfc.dropna(subset=['signal'], inplace=True) #$%@!
         dfc.loc[(dfc['minute'] < start_time), 'signal'] = 'Wait'
         dfc.loc[(dfc['minute'] > end_time), 'signal'] = 'Eod'
-        dfc['prev_signal'] = dfc.signal.shift(periods=1)
-        dfc.prev_signal.fillna('Wait', inplace=True)
+        dfc['prev_signal'] = dfc.signal.shift(periods=1) 
+        dfc.prev_signal.fillna('Wait', inplace=True) 
         db.update_position(name, dfc['signal'][-1])
         dfc.loc[(((dfc.signal == 'Buy') & ((dfc.prev_signal == 'Wait') | (dfc.prev_signal == 'Eod'))) | \
                 ((dfc.signal == 'Buy') & (dfc.prev_signal == 'Sell'))), 'buy_entry'] = dfc.close
