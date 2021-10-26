@@ -102,13 +102,18 @@ def scanner(fyers):
         out[1], out[2], out[3], out[4], out[7], out[9], out[10], out[11], out[12]
         ltp = fetch_ltp(fyers, symbol, 0)
         sl_trg = SL_trigger(stop_limit, ltp, symbol)
-        if current_time > end_time or sl_trg:
+        is_ctf = is_candle_tf(ctfp, now)
+        if current_time > end_time and trade:
             print(f"Exiting poisition for {symbol}")
-            if not sl_trg:
-                db.update_trade(name, False)
+            db.update_trade(name, False)
             exit_signal = brain.Signal(name, exchange, ins_type, current_time, ltp, 'exit_one')
             print(exit_signal.post_signal())
-        elif current_time > start_time and current_time < end_time and is_candle_tf(ctfp, now):
+        elif sl_trg and not is_ctf:
+            db.update_trade(name, False)
+            exit_signal = brain.Signal(name, exchange, ins_type, current_time, ltp, 'exit_one')
+            db.update_stop_limit(name, 0)
+            print(exit_signal.post_signal())
+        if current_time > start_time and current_time < end_time and is_ctf:
             tradable_symbols.append(out)
         elif current_time < start_time and trade:
             eve = f"Waiting till {start_time} to start {symbol}"
