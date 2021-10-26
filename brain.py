@@ -19,6 +19,54 @@ logging.basicConfig(filename='{}/logs/trade_day_{}.log'.format(mainfolder, trd_d
                     filemode = 'a')
 logger = logging.getLogger(__name__)
 
+class Signal:
+    def __init__(self, name, exchange, ins_type, time, price, action):
+        self.pa_webhooks = config.webhooks
+        self.name = name
+        self.exchange = exchange
+        self.ins_type = ins_type
+        self.time = time
+        self.price = price
+        self.action = action
+        
+    def getJsonStructure(self):
+        dic = {"passphrase": "itsmebro",
+                    "time": self.time,
+                    "tkr": self.name,
+                    "ins_type": self.ins_type,
+                    "exng": self.exchange,
+                    "strategy": {
+                    "order_contracts": 0,
+                    "order_price": self.price,
+                    "trigger_price": 0,
+                    "order_action": self.action,
+                    "order_type": "Market",
+                    "product_type": "MIS"}}
+        return json.dumps(dic)
+    
+    async def post(self, login_url):
+        async with self.session.post(login_url, data = self.payload) as resp:
+            resps = await resp.json(content_type=None)
+            return resps['message']
+
+    async def pa_post(self):
+        async with aiohttp.ClientSession() as self.session:
+            tasks = []
+            for webhook in self.pa_webhooks:
+                login_url = webhook + '/pa_webhook'
+                tasks.append(asyncio.ensure_future(Signal.post(self, login_url)))
+            all_resps = await asyncio.gather(*tasks)
+            messa = 'Spectre: ' + ": ".join(all_resps)
+            logger.info(messa)
+            telegramer(messa)
+            return messa
+    
+    def post_signal(self):
+        self.payload = Signal.getJsonStructure(self)
+        # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
+        asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
+        return asyncio.run(Signal.pa_post(self))
+
 class fetch_data:
     def __init__(self, fyers, symbol, timeframe):
         self.fyers = fyers
@@ -82,54 +130,6 @@ def current_timeframe(data, timeframe):
     df = data.resample(timeframe).apply(ohlc)
     df_tf = df.dropna()
     return df_tf
-
-class Signal:
-    def __init__(self, name, exchange, ins_type, time, price, action):
-        self.pa_webhooks = config.webhooks
-        self.name = name
-        self.exchange = exchange
-        self.ins_type = ins_type
-        self.time = time
-        self.price = price
-        self.action = action
-        
-    def getJsonStructure(self):
-        dic = {"passphrase": "itsmebro",
-                    "time": self.time,
-                    "tkr": self.name,
-                    "ins_type": self.ins_type,
-                    "exng": self.exchange,
-                    "strategy": {
-                    "order_contracts": 0,
-                    "order_price": self.price,
-                    "trigger_price": 0,
-                    "order_action": self.action,
-                    "order_type": "Market",
-                    "product_type": "MIS"}}
-        return json.dumps(dic)
-    
-    async def post(self, login_url):
-        async with self.session.post(login_url, data = self.payload) as resp:
-            resps = await resp.json(content_type=None)
-            return resps['message']
-
-    async def pa_post(self):
-        async with aiohttp.ClientSession() as self.session:
-            tasks = []
-            for webhook in self.pa_webhooks:
-                login_url = webhook + '/pa_webhook'
-                tasks.append(asyncio.ensure_future(Signal.post(self, login_url)))
-            all_resps = await asyncio.gather(*tasks)
-            messa = 'Spectre: ' + ": ".join(all_resps)
-            logger.info(messa)
-            telegramer(messa)
-            return messa
-    
-    def post_signal(self):
-        self.payload = Signal.getJsonStructure(self)
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
-        # asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
-        return asyncio.run(Signal.pa_post(self))
 
 def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time):
     try:
