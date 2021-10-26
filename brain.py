@@ -83,38 +83,53 @@ def current_timeframe(data, timeframe):
     df_tf = df.dropna()
     return df_tf
 
-def getJsonStructure(name, exchange, ins_type, time, price, action):
-    dic = {"passphrase": "itsmebro",
-                "time": time,
-                "tkr": name,
-                "ins_type": ins_type,
-                "exng": exchange,
-                "strategy": {
-                "order_contracts": 0,
-                "order_price": price,
-                "trigger_price": 0,
-                "order_action": action,
-                "order_type": "Market",
-                "product_type": "MIS"}}
-    return json.dumps(dic)
+class Signal:
+    def __init__(self, name, exchange, ins_type, time, price, action):
+        self.pa_webhooks = config.webhooks
+        self.name = name
+        self.exchange = exchange
+        self.ins_type = ins_type
+        self.time = time
+        self.price = price
+        self.action = action
+        
+    def getJsonStructure(self):
+        dic = {"passphrase": "itsmebro",
+                    "time": self.time,
+                    "tkr": self.name,
+                    "ins_type": self.ins_type,
+                    "exng": self.exchange,
+                    "strategy": {
+                    "order_contracts": 0,
+                    "order_price": self.price,
+                    "trigger_price": 0,
+                    "order_action": self.action,
+                    "order_type": "Market",
+                    "product_type": "MIS"}}
+        return json.dumps(dic)
+    
+    async def post(self, login_url):
+        async with self.session.post(login_url, data = self.payload) as resp:
+            resps = await resp.json(content_type=None)
+            return resps['message']
 
-async def post(session, login_url, payload):
-    async with session.post(login_url, data = payload) as resp:
-        resps = await resp.json(content_type=None)
-        return resps['message']
-
-async def pa_post(payload):
-    pa_webhooks = config.webhooks
-    async with aiohttp.ClientSession() as session:
-        tasks = []
-        for webhook in pa_webhooks:
-            login_url = webhook + '/pa_webhook'
-            tasks.append(asyncio.ensure_future(post(session, login_url, payload)))
-        all_resps = await asyncio.gather(*tasks)
-        messa = 'Spectre: ' + ": ".join(all_resps)
-        logger.info(messa)
-        telegramer(messa)
-        return messa
+    async def pa_post(self):
+        async with aiohttp.ClientSession() as self.session:
+            tasks = []
+            for webhook in self.pa_webhooks:
+                login_url = webhook + '/pa_webhook'
+                tasks.append(asyncio.ensure_future(Signal.post(self, login_url)))
+            all_resps = await asyncio.gather(*tasks)
+            messa = 'Spectre: ' + ": ".join(all_resps)
+            logger.info(messa)
+            telegramer(messa)
+            return messa
+    
+    def post_signal(self):
+        self.payload = Signal.getJsonStructure(self)
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
+        # asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
+        return asyncio.run(Signal.pa_post(self))
 
 def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time):
     try:
@@ -169,17 +184,13 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         db.update_stop_limit(name, dfc.stop_limit.iloc[-1])
         dfc.to_csv('data/{}.csv'.format(name))           
         if dfc.signal.iloc[-1] == 'Buy' and prev_signal != 'Buy':
-            payload = getJsonStructure(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'buy')
+            buy_signal = Signal(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'buy')
+            print(buy_signal.post_signal())
             print(f"Buy Signal for {name}")
-            # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
-            asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
-            print(asyncio.run(pa_post(payload)))
         elif dfc.signal.iloc[-1] == 'Sell' and prev_signal != 'Sell':
-            payload = getJsonStructure(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'sell')
+            sell_signal = Signal(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'sell')
+            print(sell_signal.post_signal())
             print(f"Sell Signal for {name}")
-            # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
-            asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
-            print(asyncio.run(pa_post(payload)))
         logger.info(f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!")
         return f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!"
     except:

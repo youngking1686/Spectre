@@ -106,8 +106,8 @@ def scanner(fyers):
             print(f"Exiting poisition for {symbol}")
             if not sl_trg:
                 db.update_trade(name, False)
-            payload = brain.getJsonStructure(name, exchange, ins_type, current_time, ltp, 'exit_one')
-            print(brain.post_signal(payload))
+            exit_signal = brain.Signal(name, exchange, ins_type, current_time, ltp, 'exit_one')
+            print(exit_signal.post_signal())
         elif current_time > start_time and current_time < end_time and is_candle_tf(ctfp, now):
             tradable_symbols.append(out)
         elif current_time < start_time and trade:

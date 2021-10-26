@@ -15,7 +15,7 @@ user_detail = { 'fyers_client_id': 'UH471HHHJP-100',
 
 webhooks = ['https://eaglequant.pythonanywhere.com', 'https://pooranan.pythonanywhere.com']
 
-# webhooks = ['http://127.0.0.1:5000']
+#webhooks = ['http://127.0.0.1:5000']
 
 #Telegram
 EQ_bot_token = "1555749245:AAHPha-GOQZvCfmH-SgIydwEiyu_-JGdsto"
