@@ -9,11 +9,11 @@ user_detail = { 'fyers_client_id': 'UH471HHHJP-100',
                 'fyers_app_id': 'UH471HHHJP',
                 'fyers_secret_key': 'SIZA82MRSB',
                 'fyers_id': 'XP02781',
-                'password': 'Fyer@hero1',
+                'password': 'Fyer@hero2',
                 'pan_dob': '27-01-1987',
                 'redirect_uri': "http://127.0.0.1:5000/login"}
 
-webhooks = ['https://eaglequant.pythonanywhere.com', 'https://pooranan.pythonanywhere.com']
+webhooks = ['https://eaglequant.pythonanywhere.com']#, 'https://pooranan.pythonanywhere.com']
 
 # webhooks = ['http://127.0.0.1:5000']
 

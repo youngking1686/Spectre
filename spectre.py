@@ -1,7 +1,7 @@
 import datetime as dt
 import time
 import threading
-import config, sys
+import config, sys, os
 import gc, logging
 import brok_auth, brain, db_load
 import concurrent.futures
@@ -46,50 +46,14 @@ def is_candle_tf(tf, now):
         return True
     else:
         return False
-
-def SL_trigger(SL, LTP, symbol):
-    try:
-        if SL<0: #short position
-            if LTP > abs(SL):
-                eve = f"Buy SL triggered for {symbol}"
-                logger.info(eve)
-                brain.telegramer(eve)
-                return True
-        elif SL>0: #long position
-            if LTP < SL:
-                eve = f"Sell SL triggered for {symbol}"
-                logger.info(eve)
-                brain.telegramer(eve)
-                return True
-        else:
-            pass
-        return False
-    except:
-        logger.warning(f"SL check missed for {symbol}")
-        return False
-
-def fetch_ltp(fyers, symbol, c):
-    if c < 4:
-        try:
-            return float(fyers.quotes({"symbols":symbol})['d'][0]['v']['lp'])
-        except TypeError as e:
-            eve = "Glitch get quote"
-            logger.warning(eve)
-            c+=1
-            time.sleep(0.1)
-            fetch_ltp(fyers, symbol, c)
-    else:
-        eve = "Oops! Check the connection"
-        brain.telegramer("Fetch LTP fail Stopped Spectre!")
-        logger.error(eve)
-        sys.exit(eve)
-        
+             
 def scanner(fyers):
     start = time.time()
     db_list = db.fetch_all()
     symbol_list = [active for active in db_list if active[-3]]
     if not symbol_list:
         eve = "Spectre: There are no active instruments to Trade, STOPPING!!"
+        os.remove('{}/temp/fyers.obj'.format(mainfolder))
         logger.error(eve)
         brain.telegramer(eve)
         sys.exit(eve)
@@ -100,19 +64,16 @@ def scanner(fyers):
     for out in symbol_list:
         symbol, name, exchange, ins_type, ctfp, start_time, end_time, trade, stop_limit = \
         out[1], out[2], out[3], out[4], out[7], out[9], out[10], out[11], out[12]
-        ltp = fetch_ltp(fyers, symbol, 0)
-        sl_trg = SL_trigger(stop_limit, ltp, symbol)
+        ltp = brain.fetch_ltp(fyers, symbol, 0)
+        sl_trg = brain.SL_trigger(stop_limit, ltp, symbol)
         is_ctf = is_candle_tf(ctfp, now)
         if current_time > end_time and trade:
             print(f"Exiting poisition for {symbol}")
+            brain.exit_one(name, exchange, ins_type, current_time, ltp)
             db.update_trade(name, False)
-            exit_signal = brain.Signal(name, exchange, ins_type, current_time, ltp, 'exit_one')
-            print(exit_signal.post_signal())
         elif sl_trg and not is_ctf:
-            db.update_trade(name, False)
-            exit_signal = brain.Signal(name, exchange, ins_type, current_time, ltp, 'exit_one')
             db.update_stop_limit(name, 0)
-            print(exit_signal.post_signal())
+            brain.exit_one(name, exchange, ins_type, current_time, ltp)
         if current_time > start_time and current_time < end_time and is_ctf:
             tradable_symbols.append(out)
         elif current_time < start_time and trade:

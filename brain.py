@@ -98,10 +98,54 @@ class fetch_data:
             df = df.drop(columns = ['timestamp'])
             return df
 
+def exit_one(name, exchange, ins_type, current_time, ltp):
+    exit_signal = Signal(name, exchange, ins_type, current_time, ltp, 'exit_one')
+    print(exit_signal.post_signal())
+    
+def SL_trigger(SL, LTP, symbol):
+    try:
+        if SL<0: #short position
+            if LTP > abs(SL):
+                eve = f"Buy SL triggered for {symbol}"
+                logger.info(eve)
+                telegramer(eve)
+                return True
+        elif SL>0: #long position
+            if LTP < SL:
+                eve = f"Sell SL triggered for {symbol}"
+                logger.info(eve)
+                telegramer(eve)
+                return True
+        else:
+            pass
+        return False
+    except:
+        logger.warning(f"SL check missed for {symbol}")
+        return False
+
+def fetch_ltp(fyers, symbol, c):
+    if c < 4:
+        try:
+            return float(fyers.quotes({"symbols":symbol})['d'][0]['v']['lp'])
+        except TypeError as e:
+            eve = "Glitch get quote"
+            logger.warning(eve)
+            c+=1
+            time.sleep(0.1)
+            fetch_ltp(fyers, symbol, c)
+    else:
+        eve = "Oops! Check the connection"
+        telegramer("Fetch LTP fail Stopped Spectre!")
+        logger.error(eve)
+        # sys.exit(eve)
+        return None
+
 def change_timeframe(data, timeframe): 
     ohlc = {
         'datetime':'first',
         'open': 'first',
+        'high': 'max',
+        'low': 'min',
         'close': 'last'
     }
     df = data.resample(timeframe).apply(ohlc)
@@ -125,7 +169,8 @@ def current_timeframe(data, timeframe):
         'volume': 'sum',
         'Trend':'last',
         'strn':'last',
-        'ltrn':'last'
+        'ltrn':'last',
+        'ATR':'last'
     }
     df = data.resample(timeframe).apply(ohlc)
     df_tf = df.dropna()
@@ -139,12 +184,15 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         df1 = fetch_data(fyers, symbol, 1).get_data()
         dfS = P_T(df1, stf, length)
         dfL = P_T(df1, ltf, length)
+        dfL['lATR'] = ta.ATR(dfL.high, dfL.low, dfL.close, timeperiod=length)
         df1.loc[df1.datetime.isin(dfS.datetime),'strn'] = dfS['trn']
         df1.loc[df1.datetime.isin(dfL.datetime),'ltrn'] = dfL['trn']
+        df1.loc[df1.datetime.isin(dfL.datetime),'ATR'] = dfL['lATR']
         df1.strn.ffill(inplace=True)
         df1.ltrn.ffill(inplace=True)
         df1.strn.fillna(0, inplace=True)
         df1.ltrn.fillna(0, inplace=True)
+        df1.ATR.fillna(0, inplace=True)
         df1.loc[(df1.strn > 0) & (df1.ltrn > 0), 'Trend'] = 'Uptrend'
         df1.loc[(df1.strn < 0) & (df1.ltrn < 0), 'Trend'] = 'Downtrend'
         df1.loc[((df1.strn > 0) & (df1.ltrn < 0)) | ((df1.strn < 0) & (df1.ltrn > 0)) , 'Trend'] = 'Sideways'
@@ -153,13 +201,13 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         now = dt.datetime.now().strftime("%H:%M:00")
         if dfc.minute.iloc[-1] == now:
             dfc.drop(dfc.tail(1).index,inplace=True)
-        dfc['bar_len'] = (dfc.high-dfc.low).rolling(int(length/1.5)).mean().round(2)
-        dfc.bar_len.fillna(0, inplace=True)
+        # dfc['bar_len'] = (dfc.high-dfc.low).rolling(int(length/1.5)).mean().round(2)
+        # dfc.bar_len.fillna(0, inplace=True)
         prev_signal = db.fetch_position(name)
         dfc.loc[(dfc['Trend'] == 'Uptrend'), 'signal'] = 'Buy'
         dfc.loc[(dfc['Trend'] == 'Downtrend'), 'signal'] = 'Sell'
         dfc.signal.ffill(inplace=True)
-        ####################these codes to logg the trade data are marked as #$%@! ######
+        ####################codes to logg the trade data are marked as #$%@! ######
         dfc['signal'].replace('', np.nan, inplace=True) #$%@!
         dfc.dropna(subset=['signal'], inplace=True) #$%@!
         dfc.loc[(dfc['minute'] < start_time), 'signal'] = 'Wait'
@@ -177,9 +225,20 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
                 ((dfc.signal == 'Buy') & (dfc.prev_signal == 'Sell'))), 'sell_entry'] = 0
         dfc.buy_entry.ffill(inplace=True)
         dfc.sell_entry.ffill(inplace=True)
-        conditions = [(((dfc.signal == 'Buy') & (dfc.prev_signal == 'Buy')) | ((dfc.signal == 'Buy') & (dfc.prev_signal != 'Buy'))), 
-                        (((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell')) | ((dfc.signal == 'Sell') & (dfc.prev_signal != 'Sell')))]
-        choices = [(dfc.buy_entry - (1.5*dfc.bar_len.astype(int))), (-1*(dfc.sell_entry + (1.5*dfc.bar_len.astype(int))))]
+        dfc.loc[(dfc.signal == 'Buy') & (dfc.prev_signal == 'Buy'), 'cap_pnts'] = dfc.close - dfc.buy_entry
+        dfc.loc[(dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell'), 'cap_pnts'] = dfc.sell_entry - dfc.close
+        # conditions = [(((dfc.signal == 'Buy') & (dfc.prev_signal == 'Buy')) | ((dfc.signal == 'Buy') & (dfc.prev_signal != 'Buy'))), 
+        #                 (((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell')) | ((dfc.signal == 'Sell') & (dfc.prev_signal != 'Sell')))]
+        # choices = [(dfc.buy_entry - (1.5*dfc.bar_len.astype(int))), (-1*(dfc.sell_entry + (1.5*dfc.bar_len.astype(int))))]
+        conditions = [((dfc.signal == 'Buy') & (dfc.prev_signal == 'Buy')) & (dfc.cap_pnts < .0055*dfc.buy_entry),
+                  ((dfc.signal == 'Buy') & (dfc.prev_signal == 'Buy')) & (dfc.cap_pnts > .0055*dfc.buy_entry),
+                  ((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell')) & (dfc.cap_pnts < .0055*dfc.sell_entry),
+                  ((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell')) & (dfc.cap_pnts > .0055*dfc.sell_entry),
+                    (dfc.signal != dfc.prev_signal)]
+        choices = [(dfc.buy_entry - (1.5*dfc.ATR.astype(int))),
+                (dfc.close - dfc.ATR.astype(int)),
+                ((dfc.sell_entry + (1.5*dfc.ATR.astype(int)))*-1),
+                ((dfc.close + dfc.ATR.astype(int))*-1), 0]
         dfc['stop_limit'] = np.select(conditions, choices, default=0)
         db.update_stop_limit(name, dfc.stop_limit.iloc[-1])
         dfc.to_csv('data/{}.csv'.format(name))           
@@ -191,6 +250,11 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
             sell_signal = Signal(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'sell')
             print(sell_signal.post_signal())
             print(f"Sell Signal for {name}")
+        else:
+            ltp = fetch_ltp(fyers, symbol, 0)
+            if SL_trigger(dfc.stop_limit.iloc[-1], ltp, symbol):
+                db.update_stop_limit(name, 0)
+                exit_one(name, exchange, ins_type, now, ltp)
         logger.info(f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!")
         return f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!"
     except:
