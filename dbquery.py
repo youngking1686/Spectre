@@ -46,6 +46,11 @@ class Database:
         rows = self.cur.fetchall()
         return rows[0][0]
     
+    def fetch_stop_limit(self, name):
+        self.cur.execute("""SELECT stop_limit FROM symbols WHERE name = ?""", (name,))
+        rows = self.cur.fetchall()
+        return rows[0][0]
+    
     def fetch_all(self):
         self.cur.execute("""SELECT * FROM symbols""")
         rows = self.cur.fetchall()
@@ -86,7 +91,7 @@ class Database:
             self.conn.commit()
         finally:
             lock.release()
-            
+                        
     def update_position(self, name, position):
         try:
             lock.acquire(True)

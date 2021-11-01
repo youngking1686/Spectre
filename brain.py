@@ -231,17 +231,19 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         # conditions = [(((dfc.signal == 'Buy') & (dfc.prev_signal == 'Buy')) | ((dfc.signal == 'Buy') & (dfc.prev_signal != 'Buy'))), 
         #                 (((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell')) | ((dfc.signal == 'Sell') & (dfc.prev_signal != 'Sell')))]
         # choices = [(dfc.buy_entry - (1.5*dfc.bar_len.astype(int))), (-1*(dfc.sell_entry + (1.5*dfc.bar_len.astype(int))))]
-        conditions = [((dfc.signal == 'Buy') & (dfc.prev_signal == 'Buy')) & (dfc.cap_pnts < .0055*dfc.buy_entry),
+        conditions = [(((dfc.signal == 'Buy') & (dfc.prev_signal == 'Buy')) | ((dfc.signal == 'Buy') & (dfc.prev_signal != 'Buy'))) & (dfc.cap_pnts < .0055*dfc.buy_entry),
                   ((dfc.signal == 'Buy') & (dfc.prev_signal == 'Buy')) & (dfc.cap_pnts > .0055*dfc.buy_entry),
-                  ((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell')) & (dfc.cap_pnts < .0055*dfc.sell_entry),
+                  (((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell'))  | ((dfc.signal == 'Sell') & (dfc.prev_signal != 'Sell'))) & (dfc.cap_pnts < .0055*dfc.sell_entry),
                   ((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell')) & (dfc.cap_pnts > .0055*dfc.sell_entry),
                     (dfc.signal != dfc.prev_signal)]
-        choices = [(dfc.buy_entry - (1.5*dfc.ATR)),
-                    (dfc.close - dfc.ATR),
-                    ((dfc.sell_entry + (1.5*dfc.ATR))*-1),
-                    ((dfc.close + dfc.ATR)*-1), 0]
+        choices = [(dfc.buy_entry - (1.5*dfc.ATR)), (dfc.close - dfc.ATR), ((dfc.sell_entry + (1.5*dfc.ATR))*-1), ((dfc.close + dfc.ATR)*-1), 0]
         dfc['stop_limit'] = np.select(conditions, choices, default=0)
-        db.update_stop_limit(name, dfc.stop_limit.iloc[-1])
+        prev_stop = db.fetch_stop_limit(name)
+        if prev_stop == 0:
+            db.update_stop_limit(name, dfc.stop_limit.iloc[-1])
+        else:
+            stop = max(dfc.stop_limit.iloc[-1], prev_stop)
+            db.update_stop_limit(name, stop)
         dfc.to_csv('data/{}.csv'.format(name))           
         if dfc.signal.iloc[-1] == 'Buy' and prev_signal != 'Buy':
             buy_signal = Signal(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'buy')
