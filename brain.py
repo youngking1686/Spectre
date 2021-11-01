@@ -63,8 +63,8 @@ class Signal:
     
     def post_signal(self):
         self.payload = Signal.getJsonStructure(self)
-        # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
-        asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
+        # asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
         return asyncio.run(Signal.pa_post(self))
 
 class fetch_data:
@@ -190,6 +190,7 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         df1.loc[df1.datetime.isin(dfL.datetime),'ATR'] = dfL['lATR']
         df1.strn.ffill(inplace=True)
         df1.ltrn.ffill(inplace=True)
+        df1.ATR.ffill(inplace=True)
         df1.strn.fillna(0, inplace=True)
         df1.ltrn.fillna(0, inplace=True)
         df1.ATR.fillna(0, inplace=True)

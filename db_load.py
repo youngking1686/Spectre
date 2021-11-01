@@ -10,7 +10,6 @@ format_fix = lambda x: x.replace("9", "09") if x.split(':')[0] == '9' else x
 trade = lambda x: 1 if x == 'TRUE' else 0
 
 def data_load():
-    # df = pd.read_csv('{}/symbol_load.csv'.format(mainfolder)) #Local
     gc = gspread.service_account(filename="{}/auth/optimus-321709-9d03ace9da0c.json".format(mainfolder))
     sh = gc.open("spectre_load")
     df = pd.DataFrame(sh.worksheet('Sheet1').get_all_records())

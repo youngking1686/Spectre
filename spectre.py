@@ -102,8 +102,8 @@ def scanner(fyers):
 if __name__ == '__main__':
     fyers = brok_auth.fyers_login().authenticate()
     db_load.data_load()
-    # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
-    asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
+    # asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
     eve = asyncio.run(brok_auth.pa_clients_login())
     print(eve)
     logger.info(eve)
