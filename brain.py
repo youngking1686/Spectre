@@ -184,7 +184,7 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         df1 = fetch_data(fyers, symbol, 1).get_data()
         dfS = P_T(df1, stf, length)
         dfL = P_T(df1, ltf, length)
-        dfL['lATR'] = ta.ATR(dfL.high, dfL.low, dfL.close, timeperiod=length)
+        dfL['lATR'] = round(ta.ATR(dfL.high, dfL.low, dfL.close, timeperiod=length), 1)
         df1.loc[df1.datetime.isin(dfS.datetime),'strn'] = dfS['trn']
         df1.loc[df1.datetime.isin(dfL.datetime),'ltrn'] = dfL['trn']
         df1.loc[df1.datetime.isin(dfL.datetime),'ATR'] = dfL['lATR']
@@ -236,10 +236,10 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
                   ((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell')) & (dfc.cap_pnts < .0055*dfc.sell_entry),
                   ((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell')) & (dfc.cap_pnts > .0055*dfc.sell_entry),
                     (dfc.signal != dfc.prev_signal)]
-        choices = [(dfc.buy_entry - (1.5*dfc.ATR.astype(int))),
-                (dfc.close - dfc.ATR.astype(int)),
-                ((dfc.sell_entry + (1.5*dfc.ATR.astype(int)))*-1),
-                ((dfc.close + dfc.ATR.astype(int))*-1), 0]
+        choices = [(dfc.buy_entry - (1.5*dfc.ATR)),
+                    (dfc.close - dfc.ATR),
+                    ((dfc.sell_entry + (1.5*dfc.ATR))*-1),
+                    ((dfc.close + dfc.ATR)*-1), 0]
         dfc['stop_limit'] = np.select(conditions, choices, default=0)
         db.update_stop_limit(name, dfc.stop_limit.iloc[-1])
         dfc.to_csv('data/{}.csv'.format(name))           
