@@ -13,6 +13,15 @@ def data_load():
     gc = gspread.service_account(filename="{}/auth/optimus-321709-9d03ace9da0c.json".format(mainfolder))
     sh = gc.open("spectre_load")
     df = pd.DataFrame(sh.worksheet('Sheet1').get_all_records())
+    lis_names = df['name'].to_list()
+    out = db.fetch2('SELECT name from symbols')
+    out1 = list(zip(*out))
+    for name in out1[0]:
+        if name not in lis_names:
+            print(f"{name} removed")
+            db.remove(name)
+        else:
+            continue
     for i in range(len(df)):
         try:
             db.insert(df.name[i], df.exchange[i], df.ins_type[i], int(df.stfp[i]), int(df.ltfp[i]), int(df.ctfp[i]), \

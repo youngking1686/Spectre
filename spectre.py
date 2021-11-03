@@ -64,16 +64,14 @@ def scanner(fyers):
     for out in symbol_list:
         symbol, name, exchange, ins_type, ctfp, start_time, end_time, trade, stop_limit = \
         out[1], out[2], out[3], out[4], out[7], out[9], out[10], out[11], out[12]
-        ltp = brain.fetch_ltp(fyers, symbol, 0)
-        sl_trg = brain.SL_trigger(stop_limit, ltp, symbol)
         is_ctf = is_candle_tf(ctfp, now)
+        ltp = brain.fetch_ltp(fyers, symbol, 0)
         if current_time > end_time and trade:
             print(f"Exiting poisition for {symbol}")
             brain.exit_one(name, exchange, ins_type, current_time, ltp)
             db.update_trade(name, False)
-        elif sl_trg and not is_ctf:
-            db.update_stop_limit(name, 0)
-            brain.exit_one(name, exchange, ins_type, current_time, ltp)
+        elif not is_ctf:
+            brain.SL_trigger(stop_limit, ltp, name, exchange, ins_type, current_time)
         if current_time > start_time and current_time < end_time and is_ctf:
             tradable_symbols.append(out)
         elif current_time < start_time and trade:

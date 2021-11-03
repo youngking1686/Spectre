@@ -40,22 +40,13 @@ class Database:
         self.cur.execute("""SELECT * FROM symbols WHERE name = ?""", (symbol,))
         rows = self.cur.fetchall()
         return rows[0]
-
+            
     def fetch_position(self, symbol):
         try:
             lock.acquire(True)
-            self.cur.execute("""SELECT position FROM symbols WHERE name = ?""", (symbol,))
+            self.cur.execute("""SELECT position, stop_limit FROM symbols WHERE name = ?""", (symbol,))
             rows = self.cur.fetchall()
-            return rows[0][0]
-        finally:
-            lock.release()
-    
-    def fetch_stop_limit(self, name):
-        try:
-            lock.acquire(True)
-            self.cur.execute("""SELECT stop_limit FROM symbols WHERE name = ?""", (name,))
-            rows = self.cur.fetchall()
-            return rows[0][0]            
+            return rows[0][0], rows[0][1]
         finally:
             lock.release()
     
@@ -91,20 +82,16 @@ class Database:
     def update_trade(self, name, trade):
         self.cur.execute("""UPDATE symbols SET trade = ? WHERE name = ?""", (trade, name))
         self.conn.commit()
-        
-    def update_stop_limit(self, name, stop_limit):
-        try:
-            lock.acquire(True)
-            self.cur.execute("""UPDATE symbols SET stop_limit = ? WHERE name = ?""", (stop_limit, name))
-            self.conn.commit()
-        finally:
-            lock.release()
                         
-    def update_position(self, name, position):
+    def update_position(self, name, position, stop_limit):
         try:
             lock.acquire(True)
-            self.cur.execute("""UPDATE symbols SET position = ? WHERE name = ?""", (position, name))
-            self.conn.commit()
+            if position is not None:
+                self.cur.execute("""UPDATE symbols SET position = ?, stop_limit = ? WHERE name = ?""", (position, stop_limit, name))
+                self.conn.commit()
+            else:
+                self.cur.execute("""UPDATE symbols SET stop_limit = ? WHERE name = ?""", (stop_limit, name))
+                self.conn.commit()
         finally:
             lock.release()
 

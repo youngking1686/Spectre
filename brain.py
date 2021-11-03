@@ -102,28 +102,29 @@ def exit_one(name, exchange, ins_type, current_time, ltp):
     exit_signal = Signal(name, exchange, ins_type, current_time, ltp, 'exit_one')
     print(exit_signal.post_signal())
     
-def SL_trigger(SL, LTP, symbol):
+def SL_trigger(SL, LTP, name, exchange, ins_type, now):
     try:
         if SL<0: #short position
             if LTP > abs(SL):
-                eve = f"Buy SL triggered for {symbol}"
+                eve = f"Buy SL triggered for {name}"
                 logger.info(eve)
                 telegramer(eve)
                 print(eve)
-                return True
+                db.update_position(name, None, 0)
+                exit_one(name, exchange, ins_type, now, LTP)
         elif SL>0: #long position
             if LTP < SL:
-                eve = f"Sell SL triggered for {symbol}"
+                eve = f"Sell SL triggered for {name}"
                 logger.info(eve)
                 telegramer(eve)
                 print(eve)
-                return True
+                db.update_position(name, None, 0)
+                exit_one(name, exchange, ins_type, now, LTP)
         else:
             pass
-        return False
     except:
-        logger.warning(f"SL check missed for {symbol}")
-        return False
+        logger.warning(f"SL check missed for {name}")
+        pass
 
 def fetch_ltp(fyers, symbol, c):
     if c < 4:
@@ -204,7 +205,7 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         now = dt.datetime.now().strftime("%H:%M:00")
         if dfc.minute.iloc[-1] == now:
             dfc.drop(dfc.tail(1).index,inplace=True)
-        prev_signal = db.fetch_position(name)
+        prev_signal, prev_stop = db.fetch_position(name)
         dfc.loc[(dfc['Trend'] == 'Uptrend'), 'signal'] = 'Buy'
         dfc.loc[(dfc['Trend'] == 'Downtrend'), 'signal'] = 'Sell'
         dfc.signal.ffill(inplace=True)
@@ -215,7 +216,7 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         dfc.loc[(dfc['minute'] > end_time), 'signal'] = 'Eod'
         dfc['prev_signal'] = dfc.signal.shift(periods=1) 
         dfc.prev_signal.fillna('Wait', inplace=True) 
-        db.update_position(name, dfc['signal'][-1])
+        # db.update_position(name, dfc['signal'][-1])
         dfc.loc[(((dfc.signal == 'Buy') & ((dfc.prev_signal == 'Wait') | (dfc.prev_signal == 'Eod'))) | \
                 ((dfc.signal == 'Buy') & (dfc.prev_signal == 'Sell'))), 'buy_entry'] = dfc.close
         dfc.loc[(((dfc.signal == 'Sell') & ((dfc.prev_signal == 'Wait') | (dfc.prev_signal == 'Eod'))) | \
@@ -236,27 +237,24 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
                     (dfc.signal != dfc.prev_signal)]
         choices = [(dfc.buy_entry - (1.5*dfc.ATR)), (dfc.close - dfc.ATR), ((dfc.sell_entry + (1.5*dfc.ATR))*-1), ((dfc.close + dfc.ATR)*-1), 0]
         dfc['stop_limit'] = np.select(conditions, choices, default=0)
-        prev_stop = db.fetch_stop_limit(name)
-        if prev_stop != 0 and ((dfc.signal.iloc[-1] == 'Buy' and prev_signal != 'Buy') or (dfc.signal.iloc[-1] == 'Sell' and prev_signal != 'Sell')):
+        if prev_stop != 0 and ((dfc.signal.iloc[-1] == 'Buy' and prev_signal == 'Buy') or (dfc.signal.iloc[-1] == 'Sell' and prev_signal == 'Sell')):
             stop = max(dfc.stop_limit.iloc[-1], prev_stop)
-            db.update_stop_limit(name, stop)
+            db.update_position(name, dfc['signal'][-1], stop)
         else:
             pass
         if dfc.signal.iloc[-1] == 'Buy' and prev_signal != 'Buy':
             buy_signal = Signal(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'buy')
-            db.update_stop_limit(name, dfc.stop_limit.iloc[-1])
+            db.update_position(name, dfc['signal'][-1], dfc.stop_limit.iloc[-1])
             print(buy_signal.post_signal())
             print(f"Buy Signal for {name}")
         elif dfc.signal.iloc[-1] == 'Sell' and prev_signal != 'Sell':
             sell_signal = Signal(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'sell')
-            db.update_stop_limit(name, dfc.stop_limit.iloc[-1])
+            db.update_position(name, dfc['signal'][-1], dfc.stop_limit.iloc[-1])
             print(sell_signal.post_signal())
             print(f"Sell Signal for {name}")
         else:
-            ltp = fetch_ltp(fyers, symbol, 0)
-            if SL_trigger(dfc.stop_limit.iloc[-1], ltp, symbol):
-                db.update_stop_limit(name, 0)
-                exit_one(name, exchange, ins_type, now, ltp)
+            signal, stop = db.fetch_position(name)
+            SL_trigger(stop, dfc.close.iloc[-1], name, exchange, ins_type, now)
         dfc.to_csv('data/{}.csv'.format(name))
         logger.info(f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!")
         return f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!"
