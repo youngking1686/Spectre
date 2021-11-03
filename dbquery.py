@@ -42,14 +42,22 @@ class Database:
         return rows[0]
 
     def fetch_position(self, symbol):
-        self.cur.execute("""SELECT position FROM symbols WHERE name = ?""", (symbol,))
-        rows = self.cur.fetchall()
-        return rows[0][0]
+        try:
+            lock.acquire(True)
+            self.cur.execute("""SELECT position FROM symbols WHERE name = ?""", (symbol,))
+            rows = self.cur.fetchall()
+            return rows[0][0]
+        finally:
+            lock.release()
     
     def fetch_stop_limit(self, name):
-        self.cur.execute("""SELECT stop_limit FROM symbols WHERE name = ?""", (name,))
-        rows = self.cur.fetchall()
-        return rows[0][0]
+        try:
+            lock.acquire(True)
+            self.cur.execute("""SELECT stop_limit FROM symbols WHERE name = ?""", (name,))
+            rows = self.cur.fetchall()
+            return rows[0][0]            
+        finally:
+            lock.release()
     
     def fetch_all(self):
         self.cur.execute("""SELECT * FROM symbols""")
