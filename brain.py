@@ -109,12 +109,14 @@ def SL_trigger(SL, LTP, symbol):
                 eve = f"Buy SL triggered for {symbol}"
                 logger.info(eve)
                 telegramer(eve)
+                print(eve)
                 return True
         elif SL>0: #long position
             if LTP < SL:
                 eve = f"Sell SL triggered for {symbol}"
                 logger.info(eve)
                 telegramer(eve)
+                print(eve)
                 return True
         else:
             pass
