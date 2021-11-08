@@ -63,7 +63,7 @@ def scanner(fyers):
     resp = []
     for out in symbol_list:
         symbol, name, exchange, ins_type, ctfp, start_time, end_time, trade, stop_limit = \
-        out[1], out[2], out[3], out[4], out[7], out[9], out[10], out[11], out[12]
+        out[1], out[2], out[3], out[4], out[7], out[10], out[11], out[12], out[13]
         is_ctf = is_candle_tf(ctfp, now)
         ltp = brain.fetch_ltp(fyers, symbol, 0)
         if current_time > end_time and trade:
@@ -80,7 +80,7 @@ def scanner(fyers):
             logger.info(eve)
     with concurrent.futures.ThreadPoolExecutor() as executor:
         results = [executor.submit(brain.T_T, fyers, out[1], out[2], out[3], out[4], out[5], out[6], out[7], out[8], \
-                    out[9], out[10]) for out in tradable_symbols]
+                    out[9], out[10], out[11]) for out in tradable_symbols]
         for f in concurrent.futures.as_completed(results):
             new = f.result()
             resp.append(new)

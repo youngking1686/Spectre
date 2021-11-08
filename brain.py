@@ -179,7 +179,7 @@ def current_timeframe(data, timeframe):
     df_tf = df.dropna()
     return df_tf
 
-def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time):
+def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, multi, start_time, end_time):
     try:
         stf = str(stfp) + 'min'
         ltf = str(ltfp) + 'min'
@@ -235,7 +235,7 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
                     (((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell'))  | ((dfc.signal == 'Sell') & (dfc.prev_signal != 'Sell'))) & (dfc.cap_pnts < .0055*dfc.sell_entry),
                     ((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell')) & (dfc.cap_pnts > .0055*dfc.sell_entry),
                     (dfc.signal != dfc.prev_signal)]
-        choices = [(dfc.buy_entry - (1.5*dfc.ATR)), (dfc.close - dfc.ATR), ((dfc.sell_entry + (1.5*dfc.ATR))*-1), ((dfc.close + dfc.ATR)*-1), 0]
+        choices = [(dfc.buy_entry - (multi*dfc.ATR)), (dfc.close - dfc.ATR), ((dfc.sell_entry + (multi*dfc.ATR))*-1), ((dfc.close + dfc.ATR)*-1), 0]
         dfc['stop_limit'] = np.select(conditions, choices, default=0)
         if prev_stop != 0 and ((dfc.signal.iloc[-1] == 'Buy' and prev_signal == 'Buy') or (dfc.signal.iloc[-1] == 'Sell' and prev_signal == 'Sell')):
             stop = max(dfc.stop_limit.iloc[-1], prev_stop)

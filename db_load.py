@@ -16,18 +16,21 @@ def data_load():
     lis_names = df['name'].to_list()
     out = db.fetch2('SELECT name from symbols')
     out1 = list(zip(*out))
-    for name in out1[0]:
-        if name not in lis_names:
-            print(f"{name} removed")
-            db.remove(name)
-        else:
-            continue
+    if out1:
+        for name in out1[0]:
+            if name not in lis_names:
+                print(f"{name} removed")
+                db.remove(name)
+            else:
+                continue
+    else:
+        pass
     for i in range(len(df)):
         try:
             db.insert(df.name[i], df.exchange[i], df.ins_type[i], int(df.stfp[i]), int(df.ltfp[i]), int(df.ctfp[i]), \
-                int(df.lenght[i]), format_fix(df.start_time[i]), df.end_time[i], trade(df.trade[i]), int(df.stop_limit[i]), df.position[i])
+                int(df.lenght[i]), float(df.multi[i]), format_fix(df.start_time[i]), df.end_time[i], trade(df.trade[i]), int(df.stop_limit[i]), df.position[i])
         except:
-            db.update_settings(df.name[i], int(df.stfp[i]), int(df.ltfp[i]), int(df.ctfp[i]), int(df.lenght[i]), \
+            db.update_settings(df.name[i], int(df.stfp[i]), int(df.ltfp[i]), int(df.ctfp[i]), int(df.lenght[i]), float(df.multi[i]), \
                 format_fix(df.start_time[i]), df.end_time[i], trade(df.trade[i]), int(df.stop_limit[i]), df.position[i])
     print("DB update completed")
     brain.telegramer("DB update completed")

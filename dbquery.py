@@ -21,6 +21,7 @@ if not os.path.isfile('{}/app.db'.format(mainfolder)):
             ltfp INTEGER NOT NULL,
             ctfp INTEGER NOT NULL,
             length INTEGER NOT NULL,
+            multi REAL NOT NULL,
             start_time TEXT NOT NULL,
             end_time TEXT NOT NULL,
             trade BOOLEAN NOT NULL,
@@ -60,23 +61,23 @@ class Database:
         rows = self.cur.fetchall()
         return rows
 
-    def insert(self, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time, trade, stop_limit, position):
+    def insert(self, name, exchange, ins_type, stfp, ltfp, ctfp, length, multi, start_time, end_time, trade, stop_limit, position):
         if ins_type == 'FUT':
             symbol = exchange + ':' + name + ins_type
         elif ins_type == 'EQ':
             symbol = exchange + ':' + name + '-' + ins_type
-        self.cur.execute("""INSERT INTO symbols (symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, 
-                            start_time, end_time, trade, stop_limit, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
-                         (symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time, trade, stop_limit, position))
+        self.cur.execute("""INSERT INTO symbols (symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, multi,
+                            start_time, end_time, trade, stop_limit, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+                         (symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, multi, start_time, end_time, trade, stop_limit, position))
         self.conn.commit()
 
     def remove(self, name):
         self.cur.execute("""DELETE FROM symbols WHERE name=?""", (name,))
         self.conn.commit()
 
-    def update_settings(self, name, stfp, ltfp, ctfp, length, start_time, end_time, trade, stop_limit, position):
-        self.cur.execute("""UPDATE symbols SET stfp = ?, ltfp = ?, ctfp = ?, length = ?, start_time = ?, end_time = ?, trade = ?, stop_limit = ?, position = ?
-                         WHERE name = ?""", (stfp, ltfp, ctfp, length, start_time, end_time, trade, stop_limit, position, name))
+    def update_settings(self, name, stfp, ltfp, ctfp, length, multi, start_time, end_time, trade, stop_limit, position):
+        self.cur.execute("""UPDATE symbols SET stfp = ?, ltfp = ?, ctfp = ?, length = ?,  multi = ?, start_time = ?, end_time = ?, trade = ?, stop_limit = ?, position = ?
+                         WHERE name = ?""", (stfp, ltfp, ctfp, length, multi, start_time, end_time, trade, stop_limit, position, name))
         self.conn.commit()
         
     def update_trade(self, name, trade):
