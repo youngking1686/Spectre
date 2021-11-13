@@ -39,14 +39,14 @@ def market_check(fyers):
         brain.telegramer(eve)
         return "Market is Open to Trade"
     elif market_status == 'CLOSE':
-        # cont = input("Market is closed. Do you want to continue? (y/n): ")
-        # if cont == 'y':
-        #     pass
-        # else:
-        eve = "Market is closed. Stopping the ALGO!!"
-        logger.error(eve)
-        brain.telegramer(eve)
-        sys.exit(eve)
+        cont = input("Market is closed. Do you want to continue? (y/n): ")
+        if cont == 'y':
+            pass
+        else:
+            eve = "Market is closed. Stopping the ALGO!!"
+            logger.error(eve)
+            brain.telegramer(eve)
+            sys.exit(eve)
 
 class fyers_login:
     def __init__(self):
