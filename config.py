@@ -19,4 +19,4 @@ webhooks = ['https://pooranan.pythonanywhere.com'] #['https://eaglequant.pythona
 
 #Telegram
 EQ_bot_token = "1555749245:AAHPha-GOQZvCfmH-SgIydwEiyu_-JGdsto"
-EQ_bot_chat_ids = '1276604461'
+EQ_bot_chat_ids = ['1276604461', '903638978']
