@@ -89,14 +89,14 @@ class fetch_data:
             return fetch_data.fetch(self)
 
     def get_data(self):
-            candleinfo = fetch_data.fetch(self)
-            columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
-            df = pd.DataFrame(candleinfo, columns=columns)
-            df['datetime'] = pd.to_datetime(df['timestamp'], unit='s') + pd.Timedelta('05:30:00') #Adding 5:30hrs manually to UTC for VC
-            df['minute'] = df.datetime.dt.time.map(str)
-            df = df.set_index(pd.DatetimeIndex(df["datetime"]))
-            df = df.drop(columns = ['timestamp'])
-            return df
+        candleinfo = fetch_data.fetch(self)
+        columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+        df = pd.DataFrame(candleinfo, columns=columns)
+        df['datetime'] = pd.to_datetime(df['timestamp'], unit='s') + pd.Timedelta('05:30:00') #Adding 5:30hrs manually to UTC for VC
+        df['minute'] = df.datetime.dt.time.map(str)
+        df = df.set_index(pd.DatetimeIndex(df["datetime"]))
+        df = df.drop(columns = ['timestamp'])
+        return df
 
 def exit_one(name, exchange, ins_type, current_time, ltp):
     exit_signal = Signal(name, exchange, ins_type, current_time, ltp, 'exit_one')
@@ -197,10 +197,9 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
             print(sell_signal.post_signal())
             print(f"Sell Signal for {name}")
         try:
-            dfc.to_csv('data/{}.csv'.format(name))
+            dfc.to_csv('{}/data/{}.csv'.format(mainfolder, name))
         except:
             print(f'file writing failed for {name}')
-            pass
         logger.info(f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!")
         return f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!"
     except:
