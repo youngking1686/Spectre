@@ -7,6 +7,7 @@ import brok_auth, brain, db_load
 import concurrent.futures
 from dbquery import Database
 import asyncio, requests
+import threading
 
 mainfolder = config.mainfolder
 db = Database('{}/app.db'.format(mainfolder))
@@ -29,13 +30,16 @@ def pa_check():
         if resp.content==b'ok':
             continue
         elif resp.content==b'error':
-            url = url + '/alice_login'
-            resp = requests.post(url, data=None)
-            resps = resp.json()
-            eve = resps['message'], 'Login Refreshed'
+            url2 = url + '/alice_login'
+            try:
+                resp = requests.post(url2, data=None)
+                resps = resp.json()
+                eve = resps['message'] + 'Login Refreshed'
+            except:
+                eve = f"Some Error with Aliceblue login! check! {url2}" 
             print(eve)
             logger.warning(eve)
-            brain.telegramer(url)
+            brain.telegramer(eve)
         continue 
 
 def is_candle_tf(tf, now):
@@ -93,7 +97,8 @@ def scanner(fyers):
     except:
         pass
     gc.collect()
-    pa_check()
+    t1 = threading.Thread(target=pa_check)
+    t1.start()
     interval = timeframe - (time.time() - start)
     T = threading.Timer(interval, scanner, args=[fyers])
     T.start()
