@@ -28,10 +28,10 @@ def data_load():
     for i in range(len(df)):
         try:
             db.insert(df.name[i], df.exchange[i], df.ins_type[i], int(df.stfp[i]), int(df.ltfp[i]), int(df.ctfp[i]), \
-                int(df.lenght[i]), format_fix(df.start_time[i]), df.end_time[i], trade(df.trade[i]), df.position[i])
+                int(df.lenght[i]), float(df.multi[i]), format_fix(df.start_time[i]), df.end_time[i], trade(df.trade[i]), int(df.stop_limit[i]), df.position[i])
         except:
-            db.update_settings(df.name[i], int(df.stfp[i]), int(df.ltfp[i]), int(df.ctfp[i]), int(df.lenght[i]), \
-                format_fix(df.start_time[i]), df.end_time[i], trade(df.trade[i]), df.position[i])
+            db.update_settings(df.name[i], int(df.stfp[i]), int(df.ltfp[i]), int(df.ctfp[i]), int(df.lenght[i]), float(df.multi[i]), \
+                format_fix(df.start_time[i]), df.end_time[i], trade(df.trade[i]), int(df.stop_limit[i]), df.position[i])
     print("DB update completed")
     brain.telegramer("DB update completed")
     

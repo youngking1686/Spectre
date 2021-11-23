@@ -109,9 +109,12 @@ async def pa_clients_login():
     async with aiohttp.ClientSession() as session:
         pa_webhooks = config.webhooks
         tasks = []
-        for webhook in pa_webhooks:
-            login_url = webhook + '/alice_login'
-            tasks.append(asyncio.ensure_future(alice_login(session, login_url)))
-        all_resps = await asyncio.gather(*tasks)
-        messa = 'Spectre: ' + ": ".join(all_resps)
-        return messa
+        try:
+            for webhook in pa_webhooks:
+                login_url = webhook + '/alice_login'
+                tasks.append(asyncio.ensure_future(alice_login(session, login_url)))
+            all_resps = await asyncio.gather(*tasks)
+            messa = 'Spectre: ' + ": ".join(all_resps)
+            return messa
+        except:
+            return 'Spectre: Aliceblue login failed'
