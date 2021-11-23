@@ -69,8 +69,8 @@ def scanner(fyers):
         if current_time > end_time and trade:
             print(f"Exiting poisition for {symbol}")
             eve = f"Exiting poisition for {symbol}"
-            brain.exit_one(name, exchange, ins_type, current_time, ltp, eve)
             db.update_trade(name, False)
+            brain.exit_one(name, exchange, ins_type, current_time, ltp, eve)
         elif not is_ctf:
             brain.SL_trigger(stop_limit, ltp, name, exchange, ins_type, current_time)
         if current_time > start_time and current_time < end_time and is_ctf:
