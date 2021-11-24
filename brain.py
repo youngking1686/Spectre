@@ -177,7 +177,7 @@ def current_timeframe(data, timeframe):
     return df_tf
 
 def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, multi, start_time, end_time):
-    try:
+    # try:
         stf = str(stfp) + 'min'
         ltf = str(ltfp) + 'min'
         ctf = str(ctfp) + 'min'
@@ -211,7 +211,7 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, multi
         dfc.dropna(subset=['signal'], inplace=True) #$%@!
         dfc.loc[(dfc['minute'] < start_time), 'signal'] = 'Wait'
         dfc.loc[(dfc['minute'] > end_time), 'signal'] = 'Eod'
-        dfc['prev_signal'] = dfc.signal.shift(periods=1) 
+        dfc['prev_signal'] = dfc.signal.shift(periods=1)
         dfc.prev_signal.fillna('Wait', inplace=True) 
         # db.update_position(name, dfc['signal'][-1])
         dfc.loc[(((dfc.signal == 'Buy') & ((dfc.prev_signal == 'Wait') | (dfc.prev_signal == 'Eod'))) | \
@@ -228,10 +228,10 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, multi
         dfc.loc[((dfc.signal == 'Buy') & (dfc.prev_signal == 'Buy')), 'cap_pnts'] = dfc.close - dfc.buy_entry
         dfc.loc[((dfc.signal == 'Sell') & (dfc.prev_signal == 'Sell')), 'cap_pnts'] = dfc.sell_entry - dfc.close
         conditions = [(((dfc.signal == 'Buy') & (dfc.prev_signal == 'Buy')) | ((dfc.signal == 'Buy') & (dfc.prev_signal != 'Buy'))) & (dfc.cap_pnts < .0055*dfc.buy_entry),
-                    ((dfc.signal == 'Buy' ) & (dfc.prev_signal == 'Buy')) & ((dfc.cap_pnts > .0055*dfc.buy_entry) | (prev_signal == 'Hold')),
+                    (((dfc.signal == 'Buy' ) & (dfc.prev_signal == 'Buy')) & (dfc.cap_pnts > .0055*dfc.buy_entry)),
                     (((dfc.signal == 'Sell' ) & (dfc.prev_signal == 'Sell'))  | ((dfc.signal == 'Sell') & (dfc.prev_signal != 'Sell'))) & (dfc.cap_pnts < .0055*dfc.sell_entry),
-                    ((dfc.signal == 'Sell' ) & (dfc.prev_signal == 'Sell')) & ((dfc.cap_pnts > .0055*dfc.sell_entry) | (prev_signal == 'Hold')),
-                    ((dfc.signal != dfc.prev_signal) & (dfc.prev_signal != 'Hold'))]
+                    (((dfc.signal == 'Sell' ) & (dfc.prev_signal == 'Sell')) & (dfc.cap_pnts > .0055*dfc.sell_entry)),
+                    (dfc.signal != dfc.prev_signal)]
         choices = [(dfc.buy_entry - (multi*dfc.ATR)), (dfc.close - dfc.ATR), ((dfc.sell_entry + (multi*dfc.ATR))*-1), ((dfc.close + dfc.ATR)*-1), 0]
         dfc['stop_limit'] = np.select(conditions, choices, default=0)
         if prev_stop != 0 and ((dfc.signal.iloc[-1] == 'Buy' and prev_signal == 'Buy') or (dfc.signal.iloc[-1] == 'Sell' and prev_signal == 'Sell')):
@@ -241,12 +241,14 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, multi
             pass
         if dfc.signal.iloc[-1] == 'Buy' and prev_signal != 'Buy':
             buy_signal = Signal(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'buy')
-            db.update_position(name, dfc['signal'][-1], dfc.stop_limit.iloc[-1])
+            stop = (dfc.close.iloc[-1] - dfc.ATR.iloc[-1]) if (dfc.prev_signal.iloc[-1] == 'Buy' and prev_signal == 'Hold') else dfc.stop_limit.iloc[-1]
+            db.update_position(name, dfc['signal'][-1], stop)
             print(buy_signal.post_signal())
             print(f"Buy Signal for {name}")
         elif dfc.signal.iloc[-1] == 'Sell' and prev_signal != 'Sell':
             sell_signal = Signal(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'sell')
-            db.update_position(name, dfc['signal'][-1], dfc.stop_limit.iloc[-1])
+            stop = (dfc.close.iloc[-1] + dfc.ATR.iloc[-1])*-1 if (dfc.prev_signal.iloc[-1] == 'Sell' and prev_signal == 'Hold') else dfc.stop_limit.iloc[-1]
+            db.update_position(name, dfc['signal'][-1], stop)
             print(sell_signal.post_signal())
             print(f"Sell Signal for {name}")
         elif (dfc.signal.iloc[-1] == 'Buy' or dfc.signal.iloc[-1] == 'Sell') and dfc.signal.iloc[-1] == prev_signal and prev_stop == 0:
@@ -260,11 +262,11 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, multi
             print(f'file writing failed for {name}')
         logger.info(f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!")
         return f"{name} Scan Done for {dfc.minute.iloc[-1]} {ctfp} minute candle!"
-    except:
-        eve = f"Failed scan for symbol {name}"
-        logger.warning(eve)
-        telegramer(eve)
-        return f"Failed scan for symbol {name}"
+    # except:
+    #     eve = f"Failed scan for symbol {name}"
+    #     logger.warning(eve)
+    #     telegramer(eve)
+    #     return f"Failed scan for symbol {name}"
   
 def telegramer(messa):
     EQ_bot_token = config.EQ_bot_token
