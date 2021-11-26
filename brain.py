@@ -138,7 +138,7 @@ def fetch_ltp(fyers, name, symbol, c):
         finally:
             c+=1
             time.sleep(0.1)
-            fetch_ltp(fyers, symbol, c)
+            fetch_ltp(fyers, name, symbol, c)
     else:
         eve = "Oops! Check the connection"
         telegramer("Fetch LTP fail Stopped Spectre!")
