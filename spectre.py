@@ -69,7 +69,7 @@ def scanner(fyers):
         symbol, name, exchange, ins_type, ctfp, start_time, end_time, trade, stop_limit = \
         out[1], out[2], out[3], out[4], out[7], out[10], out[11], out[12], out[13]
         is_ctf = is_candle_tf(ctfp, now)
-        ltp = brain.fetch_ltp(fyers, symbol, 0)
+        ltp = brain.fetch_ltp(fyers, name, symbol, 0)
         if current_time > end_time and trade:
             print(f"Exiting poisition for {symbol}")
             eve = f"Exiting poisition for {symbol}"

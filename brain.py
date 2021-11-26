@@ -123,13 +123,18 @@ def SL_trigger(SL, LTP, name, exchange, ins_type, now):
         logger.warning(f"SL check missed for {name}")
         pass
 
-def fetch_ltp(fyers, symbol, c):
+def fetch_ltp(fyers, name, symbol, c):
     if c < 4:
         try:
             return float(fyers.quotes({"symbols":symbol})['d'][0]['v']['lp'])
         except TypeError or KeyError:
             eve = "Glitch get quote"
             logger.warning(eve)
+        except KeyError:
+            eve = "Symbol Error"
+            logger.warning(eve)
+            telegramer(f"Symbol Error for {name}")
+            db.update_trade(name, False)
         finally:
             c+=1
             time.sleep(0.1)
