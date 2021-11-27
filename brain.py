@@ -127,21 +127,16 @@ def fetch_ltp(fyers, name, symbol, c):
     if c < 4:
         try:
             return float(fyers.quotes({"symbols":symbol})['d'][0]['v']['lp'])
-        except TypeError or KeyError:
-            eve = "Glitch get quote"
+        except:
+            eve = f"Glitch getting quote for {name}"
             logger.warning(eve)
-        except KeyError:
-            eve = "Symbol Error"
-            logger.warning(eve)
-            telegramer(f"Symbol Error for {name}")
             db.update_trade(name, False)
-        finally:
             c+=1
-            time.sleep(0.1)
+            time.sleep(0.2)
             fetch_ltp(fyers, name, symbol, c)
     else:
-        eve = "Oops! Check the connection"
-        telegramer("Fetch LTP fail Stopped Spectre!")
+        eve = f"Fetch LTP failed for {name}"
+        telegramer(eve)
         logger.error(eve)
         # sys.exit(eve)
         return None
