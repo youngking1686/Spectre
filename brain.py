@@ -130,7 +130,6 @@ def fetch_ltp(fyers, name, symbol, c):
         except:
             eve = f"Glitch getting quote for {name}"
             logger.warning(eve)
-            db.update_trade(name, False)
             c+=1
             time.sleep(0.2)
             fetch_ltp(fyers, name, symbol, c)
@@ -138,6 +137,7 @@ def fetch_ltp(fyers, name, symbol, c):
         eve = f"Fetch LTP failed for {name}"
         telegramer(eve)
         logger.error(eve)
+        db.update_trade(name, False)
         # sys.exit(eve)
         return None
 
