@@ -137,7 +137,7 @@ def fetch_ltp(fyers, name, symbol, c):
         eve = f"Fetch LTP failed for {name}"
         telegramer(eve)
         logger.error(eve)
-        db.update_trade(name, False)
+        # db.update_trade(name, False)
         # sys.exit(eve)
         return None
 
