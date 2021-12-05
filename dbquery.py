@@ -21,11 +21,9 @@ if not os.path.isfile('{}/app.db'.format(mainfolder)):
             ltfp INTEGER NOT NULL,
             ctfp INTEGER NOT NULL,
             length INTEGER NOT NULL,
-            multi REAL NOT NULL,
             start_time TEXT NOT NULL,
             end_time TEXT NOT NULL,
             trade BOOLEAN NOT NULL,
-            stop_limit INTEGER NOT NULL,
             position TEXT NOT NULL
         )
     """)
@@ -45,9 +43,9 @@ class Database:
     def fetch_position(self, symbol):
         try:
             lock.acquire(True)
-            self.cur.execute("""SELECT position, stop_limit FROM symbols WHERE name = ?""", (symbol,))
+            self.cur.execute("""SELECT position FROM symbols WHERE name = ?""", (symbol,))
             rows = self.cur.fetchall()
-            return rows[0][0], rows[0][1]
+            return rows[0][0]
         finally:
             lock.release()
     
@@ -61,38 +59,34 @@ class Database:
         rows = self.cur.fetchall()
         return rows
 
-    def insert(self, name, exchange, ins_type, stfp, ltfp, ctfp, length, multi, start_time, end_time, trade, stop_limit, position):
+    def insert(self, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time, trade, position):
         if ins_type == 'FUT':
             symbol = exchange + ':' + name + ins_type
         elif ins_type == 'EQ':
             symbol = exchange + ':' + name + '-' + ins_type
-        self.cur.execute("""INSERT INTO symbols (symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, multi,
-                            start_time, end_time, trade, stop_limit, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
-                         (symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, multi, start_time, end_time, trade, stop_limit, position))
+        self.cur.execute("""INSERT INTO symbols (symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length,
+                            start_time, end_time, trade, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+                         (symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start_time, end_time, trade, position))
         self.conn.commit()
 
     def remove(self, name):
         self.cur.execute("""DELETE FROM symbols WHERE name=?""", (name,))
         self.conn.commit()
 
-    def update_settings(self, name, stfp, ltfp, ctfp, length, multi, start_time, end_time, trade, stop_limit, position):
-        self.cur.execute("""UPDATE symbols SET stfp = ?, ltfp = ?, ctfp = ?, length = ?,  multi = ?, start_time = ?, end_time = ?, trade = ?, stop_limit = ?, position = ?
-                         WHERE name = ?""", (stfp, ltfp, ctfp, length, multi, start_time, end_time, trade, stop_limit, position, name))
+    def update_settings(self, name, stfp, ltfp, ctfp, length, start_time, end_time, trade, position):
+        self.cur.execute("""UPDATE symbols SET stfp = ?, ltfp = ?, ctfp = ?, length = ?, start_time = ?, end_time = ?, trade = ?, position = ?
+                         WHERE name = ?""", (stfp, ltfp, ctfp, length, start_time, end_time, trade, position, name))
         self.conn.commit()
         
     def update_trade(self, name, trade):
         self.cur.execute("""UPDATE symbols SET trade = ? WHERE name = ?""", (trade, name))
         self.conn.commit()
                         
-    def update_position(self, name, position, stop_limit):
+    def update_position(self, name, position):
         try:
             lock.acquire(True)
-            if position is not None:
-                self.cur.execute("""UPDATE symbols SET position = ?, stop_limit = ? WHERE name = ?""", (position, stop_limit, name))
-                self.conn.commit()
-            else:
-                self.cur.execute("""UPDATE symbols SET stop_limit = ? WHERE name = ?""", (stop_limit, name))
-                self.conn.commit()
+            self.cur.execute("""UPDATE symbols SET position = ? WHERE name = ?""", (position, name))
+            self.conn.commit()
         finally:
             lock.release()
 

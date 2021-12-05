@@ -39,19 +39,25 @@ def market_check(fyers):
         brain.telegramer(eve)
         return "Market is Open to Trade"
     elif market_status == 'CLOSE':
-        # cont = input("Market is closed. Do you want to continue? (y/n): ")
-        # if cont == 'y':
-        #     pass
-        # else:
-        eve = "Market is closed. Stopping the ALGO!!"
-        logger.error(eve)
-        brain.telegramer(eve)
-        sys.exit(eve)
+        cont = input("Market is closed. Do you want to continue? (y/n): ")
+        if cont == 'y':
+            pass
+        else:
+            eve = "Market is closed. Stopping the ALGO!!"
+            logger.error(eve)
+            brain.telegramer(eve)
+            sys.exit(eve)
 
 class fyers_login:
     def __init__(self):
         self.client_id = config.user_detail['fyers_client_id']
         self.secret_key = config.user_detail['fyers_secret_key']
+        self.fyers_userid = config.user_detail['fyers_userid']
+        self.password = config.user_detail['password']
+        
+        self.pan_dob = config.user_detail['pan_dob']
+        self.pin = int(config.user_detail['pin'])
+        self.app_id = config.user_detail['fyers_app_id']
         self.redirect_uri = config.user_detail['redirect_uri']
         self.response_type = "code"
         self.grant_type = "authorization_code"
@@ -60,33 +66,28 @@ class fyers_login:
     
     def authenticate(self):
         try:
-            inpu = {"fyers_id": config.user_detail['fyers_id'], "password": config.user_detail['password'], "pan_dob": config.user_detail['pan_dob'], 
-                    "app_id": config.user_detail['fyers_app_id'], "redirect_uri": config.user_detail['redirect_uri'], "appType": "100", "code_challenge": "", 
-                    "state": "private", "scope": "", "nonce": "private", "response_type": "code", "create_cookie": "true"}
-            session = accessToken.SessionModel(client_id=self.client_id, secret_key=self.secret_key,\
-                redirect_uri=self.redirect_uri, response_type=self.response_type, grant_type=self.grant_type, state=self.state, nonce=self.nonce)
-            response = session.generate_authcode()
-            # print("Response from Try-Catch 1 is - \n", response)
+            session = accessToken.SessionModel(client_id=self.client_id, secret_key=self.secret_key, redirect_uri=self.redirect_uri,
+                                            response_type='code', grant_type='authorization_code')
+            s = requests.Session()
+            data1 = f'{{"fy_id":"{self.fyers_userid}","password":"{self.password}","app_id":"2","imei":"","recaptcha_token":""}}'
+            r1 = s.post('https://api.fyers.in/vagator/v1/login', data=data1)
+            request_key = r1.json()["request_key"]
+
+            data2 = f'{{"request_key":"{request_key}","identity_type":"pin","identifier":"{self.pin}","recaptcha_token":""}}'
+            r2 = s.post('https://api.fyers.in/vagator/v1/verify_pin', data=data2)
+
             headers = {
-                    "accept": "*/*",
-                    "accept-language": "en-IN,en-US;q=0.9,en;q=0.8",
-                    "content-type": "application/json; charset=UTF-8",
-                    "sec-fetch-dest": "empty",
-                    "sec-fetch-mode": "cors",
-                    "sec-fetch-site": "same-origin",
-                    "referrer": response
+                'authorization': f"Bearer {r2.json()['data']['access_token']}",
+                'content-type': 'application/json; charset=UTF-8'
             }
-            result = requests.post("https://api.fyers.in/api/v2/token", headers=headers, json=inpu, allow_redirects=True)
-            var = json.loads(result.content)
-            URL = var["Url"]
-            parsed = urlparse(URL)
-            parsedlist = parse_qs(parsed.query)['auth_code']
-            auth_code = parsedlist[0]
+            data3 = f'{{"fyers_id":"{self.fyers_userid}","app_id":"{self.app_id}","redirect_uri":"{self.redirect_uri}","appType":"100","code_challenge":"","state":"abcdefg","scope":"","nonce":"","response_type":"code","create_cookie":true}}'
+            r3 = s.post('https://api.fyers.in/api/v2/token', headers=headers, data=data3)
+            parsed = urlparse(r3.json()['Url'])
+            auth_code = parse_qs(parsed.query)['auth_code'][0]
             session.set_token(auth_code)
             response = session.generate_token()
-            access_token = response["access_token"]
-            #INSERT YOUR DESKTOP PATH FOR LOG FILE CREATION
-            fyers = fyersModel.FyersModel(client_id=self.client_id, token=access_token, log_path="{}/logs/".format(mainfolder)) 
+            token = response["access_token"]
+            fyers = fyersModel.FyersModel(client_id=self.client_id, token=token, log_path="{}/logs/".format(mainfolder))
             is_async = True
             print(market_check(fyers))
             eve = "Fyers Login Successfull!"
@@ -109,12 +110,9 @@ async def pa_clients_login():
     async with aiohttp.ClientSession() as session:
         pa_webhooks = config.webhooks
         tasks = []
-        try:
-            for webhook in pa_webhooks:
-                login_url = webhook + '/alice_login'
-                tasks.append(asyncio.ensure_future(alice_login(session, login_url)))
-            all_resps = await asyncio.gather(*tasks)
-            messa = 'Spectre: ' + ": ".join(all_resps)
-            return messa
-        except:
-            return 'Spectre: Aliceblue login failed'
+        for webhook in pa_webhooks:
+            login_url = webhook + '/alice_login'
+            tasks.append(asyncio.ensure_future(alice_login(session, login_url)))
+        all_resps = await asyncio.gather(*tasks)
+        messa = 'Spectre: ' + ": ".join(all_resps)
+        return messa
