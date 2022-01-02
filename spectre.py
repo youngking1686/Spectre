@@ -22,6 +22,8 @@ logger = logging.getLogger(__name__)
 timeframe = 60 # in seconds ctf*60
 
 def pa_check():
+    """Calls pythonanywhere client and checks if it is logged in and if not logged in, sends login command remotely
+    """
     urls = config.webhooks
     for url in urls:
         url1 = url + '/pa_check'
@@ -39,6 +41,15 @@ def pa_check():
         continue 
 
 def is_candle_tf(tf, now):
+    """Checks if the current time is the candlestick time for the scrip in check 
+
+    Args:
+        tf (integer): Input strategy timeframe of the scrip
+        now (datetime): Current time passed from the calling function.
+
+    Returns:
+        [boolean]: Returns true if current time is the strategic candle time.
+    """
     minu = now.strftime("%H:%M:00")
     trt1 = minu.split(':')
     tr2 = ((int(trt1[0]) * 60) + (int(trt1[1])) /(tf))
@@ -48,6 +59,11 @@ def is_candle_tf(tf, now):
         return False
              
 def scanner(fyers):
+    """Scanner is a scheduled function calls itself through threading and runs every minute(timeframe). Runs scan for all the active scrip to be traded
+
+    Args:
+        fyers (object): fyers object generated and stored for the day is reused
+    """
     start = time.time()
     db_list = db.fetch_all()
     symbol_list = [active for active in db_list if active[-2]]

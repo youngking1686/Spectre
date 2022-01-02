@@ -30,18 +30,42 @@ class Signal:
         self.action = action
         
     def getJsonStructure(self):
-        dic = {"passphrase": "itsmebro",
-                    "time": self.time,
-                    "tkr": self.name,
-                    "ins_type": self.ins_type,
-                    "exng": self.exchange,
-                    "strategy": {
-                    "order_contracts": 0,
-                    "order_price": self.price,
-                    "trigger_price": 0,
-                    "order_action": self.action,
-                    "order_type": "Market",
-                    "product_type": "MIS"}}
+        """Makes the signal into json format to be posted to the client
+
+        Returns:
+            [json]: returns dictionary converted to json
+        """
+        if self.ins_type=='INDEX': #ins_type INDEX prepares json for synthetic futures.
+            strike = str(100 * round(float(self.price)/100))
+            tick = ("NIFTY_"+ strike, 50) if self.name == 'NIFTY50' else ("BANKNIFTY_" + strike, 25)
+            prev_tkr, prev_act = db.fetch_prev_tkr(self.name)
+            db.update_prev_tkr(self.name, tick[0])
+            if self.action =='exit_one' and prev_tkr.split('_')[1]!='0': 
+                alert = f"{prev_tkr}:Exlong:{tick[1]}" if prev_act=='Buy' else f"{prev_tkr}:Exshort:{tick[1]}"
+                tic = "NIFTY_0" if self.name == 'NIFTY50' else "BANKNIFTY_0"
+            else:
+                alert = f"{prev_tkr}:Long:{tick[1]}" if self.action=='buy' else f"{prev_tkr}:Short:{tick[1]}"
+                tic = tick[0]
+            db.update_prev_tkr(self.name, tic)
+            dic = {"passphrase": "itsmebro",
+                        "time": self.time,
+                        "strategy": {
+                        "tkr": tick[0],
+                        "alert": alert,
+                        "comment":"auto_ff"}}
+        else:
+            dic = {"passphrase": "itsmebro",
+                        "time": self.time,
+                        "tkr": self.name,
+                        "ins_type": self.ins_type,
+                        "exng": self.exchange,
+                        "strategy": {
+                        "order_contracts": 0,
+                        "order_price": self.price,
+                        "trigger_price": 0,
+                        "order_action": self.action,
+                        "order_type": "Market",
+                        "product_type": "MIS"}}
         return json.dumps(dic)
     
     async def post(self, login_url):
@@ -188,13 +212,13 @@ def T_T(fyers, symbol, name, exchange, ins_type, stfp, ltfp, ctfp, length, start
         dfc.loc[(dfc['minute'] > end_time), 'signal'] = 'Eod'       
         if dfc.signal.iloc[-1] == 'Buy' and prev_signal != 'Buy':
             buy_signal = Signal(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'buy')
-            db.update_position(name, dfc['signal'][-1])
             print(buy_signal.post_signal())
+            db.update_position(name, dfc['signal'][-1])
             print(f"Buy Signal for {name}")
         elif dfc.signal.iloc[-1] == 'Sell' and prev_signal != 'Sell':
             sell_signal = Signal(name, exchange, ins_type, dfc.minute.iloc[-1], dfc.close.iloc[-1], 'sell')
-            db.update_position(name, dfc['signal'][-1])
             print(sell_signal.post_signal())
+            db.update_position(name, dfc['signal'][-1])
             print(f"Sell Signal for {name}")
         try:
             dfc.to_csv('{}/data/{}.csv'.format(mainfolder, name))
