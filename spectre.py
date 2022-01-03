@@ -86,7 +86,7 @@ def scanner(fyers):
             print(f"Exiting poisition for {symbol}")
             brain.exit_one(name, exchange, ins_type, current_time, ltp)
             db.update_trade(name, False)
-        if current_time > start_time and current_time < end_time and is_ctf:
+        if current_time > start_time and current_time < end_time and is_ctf and trade:
             tradable_symbols.append(out)
         elif current_time < start_time and trade:
             eve = f"Waiting till {start_time} to start {symbol}"

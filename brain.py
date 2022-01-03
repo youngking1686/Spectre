@@ -77,7 +77,7 @@ class Signal:
         async with aiohttp.ClientSession() as self.session:
             tasks = []
             for webhook in self.pa_webhooks:
-                login_url = webhook + '/pa_webhook'
+                login_url = webhook + '/ks_webhook'
                 tasks.append(asyncio.ensure_future(Signal.post(self, login_url)))
             all_resps = await asyncio.gather(*tasks)
             messa = 'Spectre: ' + ": ".join(all_resps)
@@ -129,7 +129,6 @@ def exit_one(name, exchange, ins_type, current_time, ltp):
 def fetch_ltp(fyers, symbol, c):
     if c < 4:
         try:
-            print(symbol)
             resp = fyers.quotes({"symbols":symbol})
             ltp = float(resp['d'][0]['v']['lp'])
             return ltp
