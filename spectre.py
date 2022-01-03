@@ -106,7 +106,7 @@ def scanner(fyers):
     except:
         pass
     gc.collect()
-    pa_check()
+    # pa_check() ###Aliceblue Login check commented
     interval = timeframe - (time.time() - start)
     T = threading.Timer(interval, scanner, args=[fyers])
     T.start()
@@ -114,12 +114,12 @@ def scanner(fyers):
 if __name__ == '__main__':
     fyers = brok_auth.fyers_login().authenticate()
     db_load.data_load()
-    # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows
-    asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code!
-    eve = asyncio.run(brok_auth.pa_clients_login())
-    print(eve)
-    logger.info(eve)
-    brain.telegramer(eve)
+    # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) #only for windows ###Aliceblue Login commented
+    # asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy()) #For linux CHANGE before moving the code! ###Aliceblue Login commented
+    # eve = asyncio.run(brok_auth.pa_clients_login()) ###Aliceblue Login commented
+    # print(eve) ###Aliceblue Login commented
+    # logger.info(eve) ###Aliceblue Login commented
+    # brain.telegramer(eve) ###Aliceblue Login commented
     interval = timeframe - dt.datetime.now().second
     print(f"Wait for {interval} seconds To start")
     time.sleep(interval)
