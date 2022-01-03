@@ -129,13 +129,20 @@ def exit_one(name, exchange, ins_type, current_time, ltp):
 def fetch_ltp(fyers, symbol, c):
     if c < 4:
         try:
-            return float(fyers.quotes({"symbols":symbol})['d'][0]['v']['lp'])
+            print(symbol)
+            resp = fyers.quotes({"symbols":symbol})
+            ltp = float(resp['d'][0]['v']['lp'])
+            return ltp
         except TypeError as e:
             eve = "Glitch get quote"
             logger.warning(eve)
             c+=1
             time.sleep(0.1)
             fetch_ltp(fyers, symbol, c)
+        except KeyError as k:
+            eve = f"Symbol error for {symbol}"
+            logger.warning(eve)
+            telegramer(eve)
     else:
         eve = "Oops! Check the connection"
         telegramer("Fetch LTP fail Stopped Spectre!")
