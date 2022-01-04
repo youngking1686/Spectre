@@ -78,7 +78,6 @@ def scanner(fyers):
     tradable_symbols = []
     resp = []
     for out in symbol_list:
-        print(out)
         symbol, name, exchange, ins_type, ctfp, start_time, end_time, trade = \
         out[1], out[2], out[3], out[4], out[7], out[9], out[10], out[11]
         is_ctf = is_candle_tf(ctfp, now)

@@ -28,7 +28,7 @@ if not os.path.isfile('{}/app.db'.format(mainfolder)):
             prev_tkr TEXT NOT NULL
         )
     """)
-    conn.commit()
+    conn.commit() #When ever a new column added check the spectre.py column maps
     
 class Database:
     def __init__(self, db):
