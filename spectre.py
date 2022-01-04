@@ -66,7 +66,7 @@ def scanner(fyers):
     """
     start = time.time()
     db_list = db.fetch_all()
-    symbol_list = [active for active in db_list if active[-2]]
+    symbol_list = [active for active in db_list if active[-3]]
     if not symbol_list:
         eve = "Spectre: There are no active instruments to Trade, STOPPING!!"
         os.remove('{}/temp/fyers.obj'.format(mainfolder))
